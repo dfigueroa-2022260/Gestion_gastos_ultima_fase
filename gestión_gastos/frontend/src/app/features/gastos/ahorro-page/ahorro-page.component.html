@@ -1,0 +1,193 @@
+<div class="content-header">
+  <h1>CASH TRACK <span>Ahorro</span></h1>
+  <div class="content-actions">
+    <button class="btn-filter" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
+      Filter
+    </button>
+    <button class="btn-calendar" type="button">
+      Calendario
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="error-banner" *ngIf="error()">{{ error() }}</div>
+
+<div class="gastos-top">
+  <div class="stat-card highlight">
+    <div class="stat-top">
+      <span>Ahorros totales</span>
+      <span class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <div class="stat-value">Q{{ totalAhorros() | number: '1.0-2' }}</div>
+    <div class="stat-sub">{{ ahorros().length }} registros</div>
+  </div>
+
+  <div class="gastos-acciones ahorro-acciones-grid">
+    <button class="btn-primary" type="button" (click)="abrirNuevo('DEPOSITO')">Añadir ahorro</button>
+    <button class="btn-secondary" type="button" (click)="abrirNuevo('RETIRO')">Ahorro retirado</button>
+    <button class="btn-secondary" type="button" (click)="toggleLista()">
+      {{ mostrarLista() ? 'Ocultar lista' : 'Editar' }}
+    </button>
+    <button class="btn-primary" type="button" disabled title="Proximamente">Metas de ahorro</button>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-top">
+      <span>Ahorro del mes</span>
+      <span class="stat-icon dark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <div class="stat-value">Q{{ totalDelMes() | number: '1.0-2' }}</div>
+  </div>
+</div>
+
+<!-- Formulario de alta / edicion -->
+<div class="form-card" *ngIf="mostrarForm()">
+  <h3>{{ idEnEdicion() ? 'Editar movimiento' : (form.value.tipo === 'RETIRO' ? 'Retirar ahorro' : 'Nuevo ahorro') }}</h3>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" class="form-grid">
+    <div class="form-field">
+      <label for="tipo">Tipo</label>
+      <select id="tipo" formControlName="tipo">
+        <option value="DEPOSITO">Depósito</option>
+        <option value="RETIRO">Retiro</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="monto">Monto</label>
+      <input id="monto" type="number" step="0.01" min="0" formControlName="monto" />
+    </div>
+
+    <div class="form-field">
+      <label for="descripcion">Descripcion</label>
+      <input id="descripcion" type="text" formControlName="descripcion" placeholder="Opcional" />
+    </div>
+
+    <div class="form-field">
+      <label for="categoriaId">Categoria</label>
+      <select id="categoriaId" formControlName="categoriaId">
+        <option value="" disabled>Selecciona...</option>
+        <option *ngFor="let c of categorias()" [value]="c.id">{{ c.nombre }}</option>
+      </select>
+      <button type="button" class="link-btn" (click)="toggleNuevaCategoria()">
+        {{ mostrarNuevaCategoria() ? 'Cancelar' : '+ Nueva categoria' }}
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label for="fecha">Fecha</label>
+      <input id="fecha" type="date" formControlName="fecha" />
+    </div>
+
+    <!-- Mini-formulario de categoria rapida -->
+    <div class="mini-form" *ngIf="mostrarNuevaCategoria()">
+      <form [formGroup]="formCategoria" (ngSubmit)="guardarCategoria()">
+        <input type="text" formControlName="nombre" placeholder="Nombre de la categoria" />
+        <input type="color" formControlName="color" />
+        <button type="submit" class="btn-secondary">Crear</button>
+      </form>
+    </div>
+
+    <div class="error-text" *ngIf="errorForm()">{{ errorForm() }}</div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando...' : (idEnEdicion() ? 'Guardar cambios' : 'Añadir') }}
+      </button>
+      <button type="button" class="btn-secondary" (click)="cancelarForm()">Cancelar</button>
+    </div>
+  </form>
+</div>
+
+<!-- Lista para editar/eliminar -->
+<div class="form-card" *ngIf="mostrarLista()">
+  <h3>Tus movimientos</h3>
+
+  <p *ngIf="!cargando() && !ahorros().length">Todavia no registraste ningun movimiento.</p>
+
+  <div class="record-list" *ngIf="ahorros().length">
+    <div class="record-row" *ngFor="let ahorro of ahorros()">
+      <div class="record-info">
+        <strong>
+          <span [style.color]="ahorro.tipo === 'RETIRO' ? '#c43d3d' : '#1f7a4c'">
+            {{ ahorro.tipo === 'RETIRO' ? '−' : '+' }}Q{{ ahorro.monto | number: '1.0-2' }}
+          </span>
+          — {{ ahorro.categoria.nombre }}
+        </strong>
+        <small>{{ ahorro.fecha | date: 'dd/MM/yyyy' }} · {{ ahorro.descripcion || 'Sin descripcion' }}</small>
+      </div>
+      <div class="record-actions">
+        <button class="icon-btn-sm" type="button" aria-label="Editar" (click)="editar(ahorro)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="icon-btn-sm danger" type="button" aria-label="Eliminar" (click)="eliminar(ahorro)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Por mes</h3>
+    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="none" *ngIf="datosPorMes().length; else sinDatosMes">
+      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
+      <ng-container *ngFor="let p of datosPorMes(); let i = index">
+        <rect
+          [attr.x]="30 + i * 60 + 8"
+          [attr.y]="yBarra(p.total)"
+          width="28"
+          [attr.height]="alturaBarra(p.total)"
+          rx="4"
+          [attr.fill]="i % 2 === 0 ? 'var(--d-accent)' : 'var(--d-dark)'"
+        />
+        <text [attr.x]="30 + i * 60 + 22" y="214" class="axis-label">{{ p.label }}</text>
+      </ng-container>
+    </svg>
+    <ng-template #sinDatosMes>
+      <p class="empty-hint">Todavia no hay movimientos registrados para graficar.</p>
+    </ng-template>
+  </div>
+
+  <div class="chart-card">
+    <h3>Metas de ahorro cumplidas</h3>
+    <div class="donut-wrap" *ngIf="resumenCategorias().length; else sinDatosDonut">
+      <div class="donut-info">
+        <span>Revenue Analytics</span>
+        <strong>Q{{ totalResumen() | number: '1.0-2' }}</strong>
+        <button type="button">EXTRAS</button>
+      </div>
+      <svg class="donut-chart" viewBox="0 0 100 100">
+        <circle
+          *ngFor="let seg of resumenCategorias(); let i = index"
+          cx="50"
+          cy="50"
+          r="40"
+          fill="none"
+          [attr.stroke]="seg.color"
+          stroke-width="14"
+          [attr.stroke-dasharray]="donutLargo(seg.total) + ' 251'"
+          [attr.stroke-dashoffset]="donutOffset(i)"
+          transform="rotate(-90 50 50)"
+        />
+      </svg>
+    </div>
+    <ng-template #sinDatosDonut>
+      <p class="empty-hint">Todavia no hay movimientos registrados para graficar.</p>
+    </ng-template>
+
+    <div class="donut-legend" *ngIf="resumenCategorias().length">
+      <div class="legend-row" *ngFor="let seg of resumenCategorias()">
+        <span class="legend-dot" [style.background]="seg.color"></span>
+        {{ seg.nombre }} — {{ porcentaje(seg.total) | number: '1.0-1' }}%
+      </div>
+    </div>
+  </div>
+</div>

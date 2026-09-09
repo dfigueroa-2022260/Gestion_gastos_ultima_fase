@@ -12,6 +12,11 @@ enum Rol {
   USUARIO
 }
 
+enum TipoAhorro {
+  DEPOSITO
+  RETIRO
+}
+
 model Usuario {
   id             String      @id @default(uuid())
   nombre         String
@@ -25,6 +30,7 @@ model Usuario {
   categorias     Categoria[]
   gastos         Gasto[]
   ingresos       Ingreso[]
+  ahorros        Ahorro[]
 
   @@map("usuarios")
 }
@@ -37,6 +43,7 @@ model Categoria {
   usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   gastos    Gasto[]
   ingresos  Ingreso[]
+  ahorros   Ahorro[]
   createdAt DateTime  @default(now())
 
   @@unique([usuarioId, nombre])
@@ -71,4 +78,20 @@ model Ingreso {
   updatedAt   DateTime  @updatedAt
 
   @@map("ingresos")
+}
+
+model Ahorro {
+  id          String     @id @default(uuid())
+  monto       Decimal    @db.Decimal(10, 2)
+  descripcion String?
+  fecha       DateTime   @default(now())
+  tipo        TipoAhorro @default(DEPOSITO)
+  categoriaId String
+  categoria   Categoria  @relation(fields: [categoriaId], references: [id])
+  usuarioId   String
+  usuario     Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("ahorros")
 }

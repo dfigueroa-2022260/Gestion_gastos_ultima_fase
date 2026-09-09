@@ -18,6 +18,16 @@ export const GASTOS_ROUTES: Routes = [
         loadComponent: () =>
           import('../ingresos/ingresos.component').then((m) => m.IngresosComponent),
       },
+      {
+        path: 'gastos',
+        loadComponent: () =>
+          import('./gastos-page/gastos-page.component').then((m) => m.GastosPageComponent),
+      },
+      {
+        path: 'ahorro',
+        loadComponent: () =>
+          import('./ahorro-page/ahorro-page.component').then((m) => m.AhorroPageComponent),
+      },
     ],
   },
 ];
