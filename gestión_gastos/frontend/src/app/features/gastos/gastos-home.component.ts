@@ -26,7 +26,7 @@ interface ItemSidebar {
 export class GastosHomeComponent {
   readonly itemsSidebar: ItemSidebar[] = [
     { icono: 'home', label: 'Home', ruta: '/gastos', exact: true },
-    { icono: 'chart', label: 'Resumen' },
+    { icono: 'chart', label: 'Resumen', ruta: '/gastos/resumen' },
     { icono: 'card', label: 'Gastos', ruta: '/gastos/gastos' },
     { icono: 'money', label: 'Ingresos', ruta: '/gastos/ingresos' },
     { icono: 'grid', label: 'Categorias' },

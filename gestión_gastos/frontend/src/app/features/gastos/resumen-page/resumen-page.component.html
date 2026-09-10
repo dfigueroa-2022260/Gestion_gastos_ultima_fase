@@ -1,0 +1,101 @@
+<div class="content-header">
+  <h1>CASH TRACK <span>Resumen</span></h1>
+  <div class="content-actions">
+    <button class="btn-filter" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
+      Filter
+    </button>
+  </div>
+</div>
+
+<div class="resumen-grid">
+  <div class="stat-card highlight">
+    <div class="stat-top">
+      <span>Ahorros totales</span>
+      <span class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+    <div class="stat-value">Q{{ totalAhorros() | number: '1.0-2' }}</div>
+  </div>
+
+  <div class="stat-card list-card">
+    <h4>Saldos por cuenta</h4>
+    <div class="mini-row" *ngFor="let c of cuentasEjemplo">
+      <span>{{ c.nombre }}</span>
+      <strong>{{ c.saldo | number: '1.0-0' }}</strong>
+    </div>
+  </div>
+
+  <div class="stat-card ejemplo-card">
+    <h4>Gastos próximos</h4>
+    <div class="mini-row" *ngFor="let g of gastosProximosEjemplo">
+      <span>{{ g.nombre }}</span>
+      <strong>{{ g.monto | number: '1.0-0' }}</strong>
+    </div>
+    <div class="ejemplo-acciones">
+      <button class="btn-primary" type="button" disabled title="Proximamente">Crear presupuesto</button>
+      <button class="btn-secondary-dark" type="button" disabled title="Proximamente">Añadir entrada</button>
+    </div>
+  </div>
+
+  <div class="stat-card highlight-dark">
+    <div class="stat-top">
+      <span>Saldo total</span>
+      <span class="stat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </div>
+    <div class="stat-value">Q{{ saldoTotal() | number: '1.0-2' }}</div>
+  </div>
+
+  <div class="stat-card">
+    <h4>Gastos de este mes</h4>
+    <p class="pct-label">{{ gastosDelMesPct() }}% de ingresos</p>
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="gastosDelMesPct()"></div>
+    </div>
+  </div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Gastos y ganancias del mes</h3>
+    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="none" *ngIf="datosPorMes().length; else sinDatos">
+      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
+      <ng-container *ngFor="let p of datosPorMes(); let i = index">
+        <rect [attr.x]="30 + i * 70 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="3" fill="var(--d-dark)" />
+        <rect [attr.x]="30 + i * 70 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="3" fill="var(--d-accent)" />
+        <text [attr.x]="30 + i * 70 + 24" y="214" class="axis-label">{{ p.label }}</text>
+      </ng-container>
+    </svg>
+    <ng-template #sinDatos>
+      <p class="empty-hint">Todavia no hay datos suficientes para graficar.</p>
+    </ng-template>
+    <div class="mini-legend">
+      <span><i style="background: var(--d-dark)"></i> Gastos</span>
+      <span><i style="background: var(--d-accent)"></i> Ingresos</span>
+    </div>
+  </div>
+
+  <div class="chart-card calendario-card">
+    <div class="calendario-header">
+      <button type="button" (click)="mesAnterior()" aria-label="Mes anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h3>{{ nombreMesCalendario() }}</h3>
+      <button type="button" (click)="mesSiguiente()" aria-label="Mes siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="calendario-grid">
+      <span class="dia-semana" *ngFor="let d of diasSemana">{{ d }}</span>
+      <span
+        class="dia-celda"
+        *ngFor="let dia of diasCalendario()"
+        [class.vacia]="!dia"
+        [class.hoy]="esHoy(dia)"
+      >{{ dia ?? '' }}</span>
+    </div>
+  </div>
+</div>
