@@ -1,0 +1,120 @@
+<ng-template #iconTpl let-icono="icono">
+  <svg *ngIf="icono === 'food'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 2v7a2 2 0 0 0 4 0V2M9 9v13M18 2c-1.5 1.5-2 3-2 5s.5 3.5 2 5v9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'car'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13l2-6h14l2 6v6H3v-6z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg>
+  <svg *ngIf="icono === 'home'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'health'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6c0 5-8.8 10-8.8 10s-8.8-5-8.8-10a4.4 4.4 0 0 1 8.8-2 4.4 4.4 0 0 1 8.8 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'entertainment'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M8 2l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'shopping'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.3"/><circle cx="18" cy="21" r="1.3"/><path d="M3 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8a2 2 0 0 0 2-1.6L21 7H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'education'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 8l10-5 10 5-10 5-10-5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'tag'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12l-8 8-9-9V4h7l10 10z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>
+</ng-template>
+
+<div class="content-header">
+  <h1>CASH TRACK <span>categorias</span></h1>
+</div>
+
+<div class="error-banner" *ngIf="error()">{{ error() }}</div>
+
+<div class="categorias-grid">
+  <!-- Categorias principales -->
+  <div class="panel panel-principales">
+    <h3>Categorias principales</h3>
+
+    <p class="empty-hint" *ngIf="!cargando() && !principales().length">
+      Todavia no tienes categorias. Creá la primera a la derecha.
+    </p>
+
+    <button
+      *ngFor="let c of principales()"
+      type="button"
+      class="cat-item"
+      [class.active]="c.id === seleccionadaId()"
+      (click)="seleccionar(c.id)"
+    >
+      <span class="cat-icon"><ng-container *ngTemplateOutlet="iconTpl; context: { icono: c.icono }"></ng-container></span>
+      {{ c.nombre }}
+    </button>
+  </div>
+
+  <!-- Subcategorias -->
+  <div class="panel panel-subcategorias">
+    <h3>Subcategorias para {{ seleccionada()?.nombre ?? '...' }}</h3>
+
+    <select class="select-principal" [value]="seleccionadaId()" (change)="onCambiarSelect($event)" *ngIf="principales().length">
+      <option *ngFor="let c of principales()" [value]="c.id">{{ c.nombre }}</option>
+    </select>
+
+    <div class="sub-list">
+      <p class="empty-hint" *ngIf="seleccionada() && !subcategorias().length">
+        Sin subcategorias todavia.
+      </p>
+      <div class="sub-row" *ngFor="let s of subcategorias()">
+        <span>{{ s.nombre }}</span>
+        <div class="sub-actions">
+          <button type="button" (click)="editarSubcategoria(s)">Editar</button>
+          <button type="button" (click)="eliminarSubcategoria(s)">Eliminar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nueva-sub" *ngIf="seleccionada()">
+      <form [formGroup]="formSub" (ngSubmit)="crearSubcategoria()" *ngIf="mostrarNuevaSub()">
+        <input type="text" formControlName="nombre" placeholder="Nombre de la subcategoria" />
+        <button type="submit" class="btn-secondary">Agregar</button>
+      </form>
+      <button type="button" class="link-btn" (click)="toggleNuevaSub()">
+        {{ mostrarNuevaSub() ? 'Cancelar' : '+ Nueva subcategoria' }}
+      </button>
+    </div>
+
+    <button class="btn-secondary-dark" type="button" (click)="seleccionadaId.set(seleccionadaId())">
+      Cambiar categoria
+    </button>
+  </div>
+
+  <!-- Crear nueva categoria principal -->
+  <div class="panel panel-crear">
+    <h3>Crear Nueva Categoria</h3>
+
+    <form [formGroup]="formNueva" (ngSubmit)="crearPrincipal()">
+      <label for="nombreCat">Nombre de la Categoria</label>
+      <input id="nombreCat" type="text" formControlName="nombre" placeholder="ej. Mascotas" />
+
+      <label>Icono</label>
+      <div class="icon-grid">
+        <button
+          type="button"
+          *ngFor="let i of iconos"
+          class="icon-opt"
+          [class.active]="i.key === iconoSeleccionado()"
+          (click)="seleccionarIcono(i.key)"
+          [attr.aria-label]="i.label"
+        >
+          <ng-container *ngTemplateOutlet="iconTpl; context: { icono: i.key }"></ng-container>
+        </button>
+      </div>
+
+      <div class="error-text" *ngIf="errorForm()">{{ errorForm() }}</div>
+
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Creando...' : 'Crear' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="charts-grid single">
+  <div class="chart-card">
+    <h3>Gastos por categoria</h3>
+    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="none" *ngIf="resumenGastos().length; else sinDatos">
+      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
+      <ng-container *ngFor="let r of resumenGastos(); let i = index">
+        <rect [attr.x]="30 + i * 60 + 8" [attr.y]="yBarra(r.total)" width="28" [attr.height]="alturaBarra(r.total)" rx="4" [attr.fill]="r.color" />
+        <text [attr.x]="30 + i * 60 + 22" y="214" class="axis-label">{{ r.nombre }}</text>
+      </ng-container>
+    </svg>
+    <ng-template #sinDatos>
+      <p class="empty-hint">Todavia no hay gastos registrados para graficar.</p>
+    </ng-template>
+  </div>
+</div>

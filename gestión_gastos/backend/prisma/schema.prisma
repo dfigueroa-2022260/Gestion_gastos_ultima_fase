@@ -36,15 +36,19 @@ model Usuario {
 }
 
 model Categoria {
-  id        String    @id @default(uuid())
-  nombre    String
-  color     String    @default("#E8672A")
-  usuarioId String
-  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  gastos    Gasto[]
-  ingresos  Ingreso[]
-  ahorros   Ahorro[]
-  createdAt DateTime  @default(now())
+  id               String      @id @default(uuid())
+  nombre           String
+  color            String      @default("#E8672A")
+  icono            String      @default("tag")
+  categoriaPadreId String?
+  categoriaPadre   Categoria?  @relation("Subcategorias", fields: [categoriaPadreId], references: [id], onDelete: Cascade)
+  subcategorias    Categoria[] @relation("Subcategorias")
+  usuarioId        String
+  usuario          Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  gastos           Gasto[]
+  ingresos         Ingreso[]
+  ahorros          Ahorro[]
+  createdAt        DateTime    @default(now())
 
   @@unique([usuarioId, nombre])
   @@map("categorias")

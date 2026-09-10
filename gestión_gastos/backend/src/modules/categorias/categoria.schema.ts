@@ -6,6 +6,8 @@ export const categoriaSchema = z.object({
     .string()
     .regex(/^#([0-9A-Fa-f]{6})$/, "El color debe ser un hexadecimal valido")
     .optional(),
+  icono: z.string().optional(),
+  categoriaPadreId: z.string().uuid().nullable().optional(),
 });
 
 export type CategoriaInput = z.infer<typeof categoriaSchema>;

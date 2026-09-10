@@ -2,6 +2,8 @@ import { prisma } from "../../config/prisma";
 import { AppError } from "../../utils/AppError";
 import { CategoriaInput } from "./categoria.schema";
 
+// Devuelve TODAS las categorias del usuario (principales y subcategorias);
+// el frontend las separa segun categoriaPadreId.
 export const listarCategorias = (usuarioId: string) => {
   return prisma.categoria.findMany({
     where: { usuarioId },
@@ -19,6 +21,15 @@ export const crearCategoria = async (
 
   if (existente) {
     throw new AppError("Ya tienes una categoria con ese nombre", 409);
+  }
+
+  if (data.categoriaPadreId) {
+    const padre = await prisma.categoria.findFirst({
+      where: { id: data.categoriaPadreId, usuarioId },
+    });
+    if (!padre) {
+      throw new AppError("La categoria principal no existe", 404);
+    }
   }
 
   return prisma.categoria.create({

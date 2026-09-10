@@ -29,7 +29,7 @@ export class GastosHomeComponent {
     { icono: 'chart', label: 'Resumen', ruta: '/gastos/resumen' },
     { icono: 'card', label: 'Gastos', ruta: '/gastos/gastos' },
     { icono: 'money', label: 'Ingresos', ruta: '/gastos/ingresos' },
-    { icono: 'grid', label: 'Categorias' },
+    { icono: 'grid', label: 'Categorias', ruta: '/gastos/categorias' },
     { icono: 'tag', label: 'Etiquetas' },
     { icono: 'pie', label: 'Reportes' },
     { icono: 'clipboard', label: 'Metas' },
