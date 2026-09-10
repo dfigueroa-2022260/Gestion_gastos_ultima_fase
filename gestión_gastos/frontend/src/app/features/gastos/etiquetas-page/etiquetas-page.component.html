@@ -1,0 +1,156 @@
+<ng-template #iconTpl let-icono="icono">
+  <svg *ngIf="icono === 'food'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 2v7a2 2 0 0 0 4 0V2M9 9v13M18 2c-1.5 1.5-2 3-2 5s.5 3.5 2 5v9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'car'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 13l2-6h14l2 6v6H3v-6z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg>
+  <svg *ngIf="icono === 'home'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'health'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6c0 5-8.8 10-8.8 10s-8.8-5-8.8-10a4.4 4.4 0 0 1 8.8-2 4.4 4.4 0 0 1 8.8 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'entertainment'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M8 2l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'shopping'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1.3"/><circle cx="18" cy="21" r="1.3"/><path d="M3 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8a2 2 0 0 0 2-1.6L21 7H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'education'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 8l10-5 10 5-10 5-10-5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <svg *ngIf="icono === 'tag'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12l-8 8-9-9V4h7l10 10z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>
+</ng-template>
+
+<div class="content-header">
+  <h1>CASH TRACK <span>etiquetas</span></h1>
+  <div class="content-actions">
+    <button class="btn-filter" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
+      Filter
+    </button>
+  </div>
+</div>
+
+<div class="error-banner" *ngIf="error()">{{ error() }}</div>
+
+<div class="etiquetas-grid">
+  <!-- Principales -->
+  <div class="panel panel-principales">
+    <h3>Etiquetas principales</h3>
+
+    <p class="empty-hint" *ngIf="!cargando() && !principales().length">
+      Todavia no tienes etiquetas. Creá la primera a la derecha.
+    </p>
+
+    <button
+      *ngFor="let e of principales()"
+      type="button"
+      class="tag-item"
+      [class.active]="e.id === seleccionadaId()"
+      (click)="seleccionar(e.id)"
+    >
+      <span class="tag-icon"><ng-container *ngTemplateOutlet="iconTpl; context: { icono: e.icono }"></ng-container></span>
+      {{ e.nombre }}
+    </button>
+  </div>
+
+  <!-- Detalle -->
+  <div class="panel panel-detalle">
+    <h3>Detalles de etiquetas</h3>
+
+    <button class="detalle-header" type="button" (click)="toggleDetalle()" *ngIf="seleccionada() as sel">
+      <span class="tag-icon"><ng-container *ngTemplateOutlet="iconTpl; context: { icono: sel.icono }"></ng-container></span>
+      <strong>{{ sel.nombre }}</strong>
+      <svg class="chevron" [class.abierto]="detalleAbierto()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="sub-list" *ngIf="detalleAbierto()">
+      <p class="empty-hint" *ngIf="seleccionada() && !subetiquetas().length">Sin sub-etiquetas todavia.</p>
+      <div class="sub-row" *ngFor="let s of subetiquetas()">
+        <span>{{ s.nombre }}</span>
+        <div class="sub-actions">
+          <button type="button" (click)="editar(s)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Editar
+          </button>
+          <button type="button" class="danger" (click)="eliminar(s)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Eliminar
+          </button>
+        </div>
+      </div>
+
+      <div class="nueva-sub" *ngIf="seleccionada()">
+        <form [formGroup]="formSub" (ngSubmit)="crearSub()" *ngIf="mostrarNuevaSub()">
+          <input type="text" formControlName="nombre" placeholder="Nombre de la sub-etiqueta" />
+          <button type="submit" class="btn-secondary">Agregar</button>
+        </form>
+        <button type="button" class="link-btn" (click)="toggleNuevaSub()">
+          {{ mostrarNuevaSub() ? 'Cancelar' : '+ Nueva sub-etiqueta' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Crear nueva etiqueta -->
+  <div class="panel panel-crear">
+    <h3>crear una nueva etiqueta</h3>
+
+    <form [formGroup]="formNueva" (ngSubmit)="crearPrincipal()">
+      <label for="nombreEt">Nombre de la Etiqueta</label>
+      <input id="nombreEt" type="text" formControlName="nombre" placeholder="ej. ProyectoA" />
+
+      <label>Icon</label>
+      <div class="icon-grid">
+        <button
+          type="button"
+          *ngFor="let i of iconos"
+          class="icon-opt"
+          [class.active]="i.key === iconoSeleccionado()"
+          (click)="seleccionarIcono(i.key)"
+          [attr.aria-label]="i.label"
+        >
+          <ng-container *ngTemplateOutlet="iconTpl; context: { icono: i.key }"></ng-container>
+        </button>
+      </div>
+
+      <label>color</label>
+      <div class="color-grid">
+        <button
+          type="button"
+          *ngFor="let c of colores"
+          class="color-opt"
+          [class.active]="c === colorSeleccionado()"
+          [style.background]="c"
+          (click)="seleccionarColor(c)"
+          [attr.aria-label]="c"
+        ></button>
+      </div>
+
+      <div class="error-text" *ngIf="errorForm()">{{ errorForm() }}</div>
+
+      <button type="submit" class="btn-secondary-dark" [disabled]="guardando()">
+        {{ guardando() ? 'Creando...' : 'crear' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="historial-panel">
+  <div class="historial-header">
+    <h3>Historial de etiquetas</h3>
+  </div>
+
+  <div class="historial-body">
+    <div class="tags-strip">
+      <div class="tag-shape" *ngFor="let e of principales()">
+        <span>{{ e.nombre }}</span>
+      </div>
+      <p class="empty-hint light" *ngIf="!principales().length">Todavia no hay etiquetas para mostrar aqui.</p>
+    </div>
+
+    <div class="calendario-mini">
+      <div class="calendario-header">
+        <button type="button" (click)="mesAnterior()" aria-label="Mes anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <h3>{{ nombreMesCalendario() }}</h3>
+        <button type="button" (click)="mesSiguiente()" aria-label="Mes siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="calendario-grid">
+        <span class="dia-semana" *ngFor="let d of diasSemana">{{ d }}</span>
+        <span class="dia-celda" *ngFor="let dia of diasCalendario()" [class.vacia]="!dia" [class.hoy]="esHoy(dia)">{{ dia ?? '' }}</span>
+      </div>
+    </div>
+  </div>
+</div>

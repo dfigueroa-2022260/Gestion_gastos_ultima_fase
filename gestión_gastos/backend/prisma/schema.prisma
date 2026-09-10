@@ -31,8 +31,25 @@ model Usuario {
   gastos         Gasto[]
   ingresos       Ingreso[]
   ahorros        Ahorro[]
+  etiquetas      Etiqueta[]
 
   @@map("usuarios")
+}
+
+model Etiqueta {
+  id              String     @id @default(uuid())
+  nombre          String
+  color           String     @default("#E8672A")
+  icono           String     @default("tag")
+  etiquetaPadreId String?
+  etiquetaPadre   Etiqueta?  @relation("Subetiquetas", fields: [etiquetaPadreId], references: [id], onDelete: Cascade)
+  subetiquetas    Etiqueta[] @relation("Subetiquetas")
+  usuarioId       String
+  usuario         Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt       DateTime   @default(now())
+
+  @@unique([usuarioId, nombre])
+  @@map("etiquetas")
 }
 
 model Categoria {
