@@ -1,0 +1,149 @@
+@import '../styles/dashboard-shared';
+
+.error-banner {
+  background: rgba(196, 61, 61, 0.1);
+  border: 1px solid rgba(196, 61, 61, 0.3);
+  color: #c43d3d;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.reportes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.6fr;
+  gap: 18px;
+  margin-bottom: 18px;
+  align-items: stretch;
+}
+
+.stat-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.stat-card.highlight {
+  background: var(--d-accent);
+  border-color: var(--d-accent);
+  color: #fff;
+}
+
+.stat-card.highlight-dark {
+  background: var(--d-dark);
+  border-color: var(--d-dark);
+  color: #fff;
+}
+
+.mini-trend {
+  width: 100%;
+  height: 40px;
+  margin-top: 10px;
+}
+
+.mini-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--d-dark);
+  margin-top: 14px;
+}
+
+.categoria-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+.categoria-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.categoria-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  strong {
+    font-size: 17px;
+  }
+}
+
+.donut-sm {
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+}
+
+.comparativa-card {
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    text-transform: none;
+  }
+}
+
+.comparativa-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.comparativa-body .line-chart {
+  flex: 1;
+  height: 240px;
+}
+
+.mini-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--d-ink-soft);
+  flex-shrink: 0;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  &.vertical {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.empty-hint {
+  color: var(--d-ink-soft);
+  font-size: 13px;
+  padding: 30px 0;
+  text-align: center;
+}
+
+@media (max-width: 1080px) {
+  .reportes-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .reportes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparativa-body {
+    flex-direction: column;
+  }
+}

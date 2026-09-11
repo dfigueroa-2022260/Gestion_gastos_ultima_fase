@@ -31,7 +31,7 @@ export class GastosHomeComponent {
     { icono: 'money', label: 'Ingresos', ruta: '/gastos/ingresos' },
     { icono: 'grid', label: 'Categorias', ruta: '/gastos/categorias' },
     { icono: 'tag', label: 'Etiquetas', ruta: '/gastos/etiquetas' },
-    { icono: 'pie', label: 'Reportes' },
+    { icono: 'pie', label: 'Reportes', ruta: '/gastos/reportes' },
     { icono: 'clipboard', label: 'Metas' },
   ];
 

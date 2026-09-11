@@ -19,6 +19,13 @@ export const GASTOS_ROUTES: Routes = [
           import('../ingresos/ingresos.component').then((m) => m.IngresosComponent),
       },
       {
+        path: 'reportes',
+        loadComponent: () =>
+          import('./reportes-page/reportes-page.component').then(
+            (m) => m.ReportesPageComponent
+          ),
+      },
+      {
         path: 'etiquetas',
         loadComponent: () =>
           import('./etiquetas-page/etiquetas-page.component').then(
