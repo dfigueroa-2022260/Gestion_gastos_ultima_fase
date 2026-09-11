@@ -32,7 +32,7 @@ export class GastosHomeComponent {
     { icono: 'grid', label: 'Categorias', ruta: '/gastos/categorias' },
     { icono: 'tag', label: 'Etiquetas', ruta: '/gastos/etiquetas' },
     { icono: 'pie', label: 'Reportes', ruta: '/gastos/reportes' },
-    { icono: 'clipboard', label: 'Metas' },
+    { icono: 'clipboard', label: 'Metas', ruta: '/gastos/metas' },
   ];
 
   // Solo para los items SIN ruta real todavia (feedback visual al click).

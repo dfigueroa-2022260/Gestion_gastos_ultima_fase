@@ -7,6 +7,7 @@ import categoriaRoutes from "./modules/categorias/categoria.routes";
 import etiquetaRoutes from "./modules/etiquetas/etiqueta.routes";
 import gastoRoutes from "./modules/gastos/gasto.routes";
 import ingresoRoutes from "./modules/ingresos/ingreso.routes";
+import metaRoutes from "./modules/metas/meta.routes";
 import usuarioRoutes from "./modules/usuarios/usuario.routes";
 
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api/etiquetas", etiquetaRoutes);
 app.use("/api/gastos", gastoRoutes);
 app.use("/api/ingresos", ingresoRoutes);
 app.use("/api/ahorros", ahorroRoutes);
+app.use("/api/metas", metaRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

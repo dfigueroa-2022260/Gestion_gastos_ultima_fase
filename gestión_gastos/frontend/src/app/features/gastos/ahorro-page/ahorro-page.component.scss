@@ -38,6 +38,14 @@
   align-content: center;
   min-width: 220px;
 
+  a.btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    text-align: center;
+  }
+
   button:disabled {
     opacity: 0.5;
     cursor: not-allowed;

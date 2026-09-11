@@ -1,0 +1,108 @@
+<div class="content-header">
+  <h1>CASH TRACK <span>Metas</span></h1>
+  <div class="content-actions">
+    <button class="btn-filter" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
+      Filter
+    </button>
+  </div>
+</div>
+
+<div class="error-banner" *ngIf="error()">{{ error() }}</div>
+
+<div class="metas-grid">
+  <!-- Metas activas -->
+  <div class="panel panel-activas">
+    <div class="panel-header">
+      <h2>Metas activas</h2>
+      <button type="button" class="header-btn" (click)="toggleEdicion()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {{ modoEdicion() ? 'listo' : 'editar' }}
+      </button>
+    </div>
+
+    <p class="empty-hint light" *ngIf="!cargando() && !metas().length">
+      Todavia no tenes metas. Creá la primera a la derecha.
+    </p>
+
+    <div class="meta-row" *ngFor="let m of metas()">
+      <span class="meta-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12l-8 8-9-9V4h7l10 10z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>
+      </span>
+
+      <div class="meta-body">
+        <div class="meta-top">
+          <strong>{{ m.nombre }}</strong>
+          <span class="meta-estado">{{ estado(m) }}</span>
+        </div>
+        <div class="meta-sub">Q{{ m.montoActual | number: '1.0-0' }}/{{ m.montoObjetivo | number: '1.0-0' }}</div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="progreso(m)"></div>
+        </div>
+      </div>
+
+      <div class="meta-actions" *ngIf="modoEdicion()">
+        <button type="button" (click)="aportar(m)" title="Aportar">+</button>
+        <button type="button" class="danger" (click)="eliminar(m)" title="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Crear nueva meta -->
+  <div class="panel panel-crear">
+    <h2>Crear nueva meta</h2>
+
+    <form [formGroup]="form" (ngSubmit)="crear()">
+      <label for="nombreMeta">Nombre de la meta</label>
+      <input id="nombreMeta" type="text" formControlName="nombre" placeholder="ej. Vacaciones" />
+
+      <label for="montoObjetivo">Monto total de la meta</label>
+      <input id="montoObjetivo" type="number" min="1" step="0.01" formControlName="montoObjetivo" />
+
+      <label for="fechaCumplimiento">Fecha de cumplimiento</label>
+      <input id="fechaCumplimiento" type="date" formControlName="fechaCumplimiento" />
+
+      <div class="error-text" *ngIf="errorForm()">{{ errorForm() }}</div>
+
+      <div class="prioridad-row">
+        <span>prioridad de meta</span>
+        <select formControlName="prioridad">
+          <option value="ALTA">Alta</option>
+          <option value="MEDIA">Media</option>
+          <option value="BAJA">Baja</option>
+        </select>
+      </div>
+
+      <label class="automatizar-row">
+        <input type="checkbox" formControlName="automatizarAhorro" />
+        <span class="check-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        Automatizar ahorro
+      </label>
+
+      <button type="submit" class="btn-primary" [disabled]="guardando()">
+        {{ guardando() ? 'Creando...' : 'Crear meta' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="chart-card tendencia-card">
+  <div class="tendencia-header">
+    <h3>Tendencias</h3>
+    <span>prevision de cumplimiento</span>
+  </div>
+  <svg class="line-chart" viewBox="0 0 460 200" preserveAspectRatio="none" *ngIf="tendencia().length > 1; else sinTendencia">
+    <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="180 - f * 140" x2="450" [attr.y2]="180 - f * 140" class="grid-line" />
+    <polyline [attr.points]="puntosLinea()" class="line-accent" />
+    <ng-container *ngFor="let p of tendencia(); let i = index">
+      <text [attr.x]="30 + i * 55" y="196" class="axis-label">{{ p.label }}</text>
+    </ng-container>
+  </svg>
+  <ng-template #sinTendencia>
+    <p class="empty-hint">Registrá ahorros en al menos 2 meses distintos para ver la tendencia.</p>
+  </ng-template>
+</div>

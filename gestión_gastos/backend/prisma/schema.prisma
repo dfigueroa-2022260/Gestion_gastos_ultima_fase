@@ -32,8 +32,32 @@ model Usuario {
   ingresos       Ingreso[]
   ahorros        Ahorro[]
   etiquetas      Etiqueta[]
+  metas          Meta[]
 
   @@map("usuarios")
+}
+
+enum PrioridadMeta {
+  ALTA
+  MEDIA
+  BAJA
+}
+
+model Meta {
+  id                 String        @id @default(uuid())
+  nombre             String
+  montoObjetivo      Decimal       @db.Decimal(10, 2)
+  montoActual        Decimal       @db.Decimal(10, 2) @default(0)
+  fechaCumplimiento  DateTime?
+  prioridad          PrioridadMeta @default(MEDIA)
+  automatizarAhorro  Boolean       @default(false)
+  icono              String        @default("tag")
+  usuarioId          String
+  usuario            Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@map("metas")
 }
 
 model Etiqueta {

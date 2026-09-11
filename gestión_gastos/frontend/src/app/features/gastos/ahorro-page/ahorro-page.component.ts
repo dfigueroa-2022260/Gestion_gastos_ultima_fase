@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   FormBuilder,
   FormControl,
@@ -36,7 +37,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-ahorro-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './ahorro-page.component.html',
   styleUrl: './ahorro-page.component.scss',
 })
