@@ -1,1 +1,17 @@
-/* You can add global styles to this file, and also import other style files */
+/* Reset global: sin esto, el margen por defecto del navegador en <body>
+   deja ver un borde blanco alrededor de toda la app. */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #f3ead9;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}

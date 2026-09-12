@@ -1,0 +1,28 @@
+<div class="top-filters-wrap">
+  <button class="btn-filter" type="button" (click)="toggle()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
+    {{ etiquetaActual() }}
+  </button>
+  <button class="btn-calendar" type="button" (click)="toggle()">
+    Calendario
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+
+  <div class="filtros-panel" *ngIf="abierto()">
+    <p class="panel-label">Rango rapido</p>
+    <div class="presets">
+      <button type="button" (click)="aplicarPreset('todo')">Todo</button>
+      <button type="button" (click)="aplicarPreset('mes')">Este mes</button>
+      <button type="button" (click)="aplicarPreset('mesPasado')">Mes pasado</button>
+      <button type="button" (click)="aplicarPreset('anio')">Este año</button>
+    </div>
+
+    <p class="panel-label">Rango personalizado</p>
+    <div class="custom-range">
+      <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+      <span>a</span>
+      <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+    </div>
+    <button type="button" class="btn-aplicar" (click)="aplicarPersonalizado()">Aplicar</button>
+  </div>
+</div>
