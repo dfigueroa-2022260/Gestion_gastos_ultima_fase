@@ -2,6 +2,7 @@ export type PrioridadMeta = 'ALTA' | 'MEDIA' | 'BAJA';
 
 export interface Meta {
   id: string;
+  createdAt: string;
   nombre: string;
   montoObjetivo: number;
   montoActual: number;

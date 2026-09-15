@@ -1,4 +1,3 @@
-@import '../styles/dashboard-shared';
 
 .error-banner {
   background: rgba(196, 61, 61, 0.1);
@@ -39,7 +38,7 @@
   padding: 12px 16px;
   border-radius: 10px;
   border: 1px solid var(--d-border);
-  background: #fff;
+  background: var(--d-card, #fff);
   color: var(--d-ink);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -49,11 +48,11 @@
   text-align: left;
 
   &:hover {
-    background: #fbf7ee;
+    background: var(--d-surface, #fbf7ee);
   }
 
   &.active {
-    background: #fbf1e2;
+    background: var(--d-surface, #fbf1e2);
     border-color: var(--d-accent);
   }
 }
@@ -88,7 +87,7 @@
   padding: 14px 16px;
   border-radius: 10px;
   border: none;
-  background: #fff;
+  background: var(--d-card, #fff);
   color: var(--d-ink);
   cursor: pointer;
   margin-bottom: 12px;
@@ -111,7 +110,7 @@
 }
 
 .sub-list {
-  background: #fff;
+  background: var(--d-card, #fff);
   border-radius: 10px;
   padding: 8px 14px;
   color: var(--d-ink);
@@ -209,7 +208,7 @@
     border-radius: 8px;
     font-family: 'Inter', sans-serif;
     font-size: 14px;
-    background: #fbf7ee;
+    background: var(--d-surface, #fbf7ee);
     margin-bottom: 4px;
   }
 }
@@ -229,7 +228,7 @@
   justify-content: center;
   border: 1px solid var(--d-border);
   border-radius: 8px;
-  background: #fbf7ee;
+  background: var(--d-surface, #fbf7ee);
   color: var(--d-ink);
   cursor: pointer;
 
@@ -302,62 +301,72 @@
 .historial-header h3 {
   color: #fff;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 300;
   margin: 0 0 18px;
 }
 
 .historial-body {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
   align-items: start;
 }
 
 .tags-strip {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 4px 0;
 }
 
 .tag-shape {
   position: relative;
-  width: 88px;
-  height: 130px;
-  background: var(--d-dark);
-  border: 2px solid #fff;
-  border-radius: 10px 10px 40px 40px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 14px;
+  flex: 0 0 76px;
+  width: 76px;
+  height: 174px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform .15s ease;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #fff;
-    border: 2px solid var(--d-dark);
-  }
+  .tag-outline { display: block; width: 100%; height: 100%; }
+  .tag-silhouette { fill: #080807; }
+  .tag-border { fill: none; stroke: #d8d0c3; stroke-width: 1; }
+  .tag-hole { fill: var(--d-accent); }
 
   span {
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
+    position: absolute;
+    left: 50%;
+    top: 61%;
+    width: 125px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #e5ded4;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.2;
+    text-align: center;
+    transform: translate(-50%, -50%) rotate(-68deg);
   }
+
+  &:hover { transform: translateY(-3px); }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  &[aria-pressed='true'] .tag-border { stroke: #fff; stroke-width: 1.6; }
 }
 
 .calendario-mini {
-  background: #fff;
+  background: var(--d-card, #fff);
   border-radius: 12px;
   padding: 16px 18px;
-  min-width: 280px;
+  min-width: 0;
+  width: 280px;
+  max-width: 100%;
 }
 
 .calendario-header {
@@ -377,7 +386,7 @@
     height: 26px;
     border-radius: 50%;
     border: 1px solid var(--d-border);
-    background: #fff;
+    background: var(--d-card, #fff);
     display: flex;
     align-items: center;
     justify-content: center;

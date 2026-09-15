@@ -1,4 +1,3 @@
-@import '../styles/dashboard-shared';
 
 .error-banner {
   background: rgba(196, 61, 61, 0.1);
@@ -130,3 +129,6 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ahorro-acciones-grid {gap:12px;align-items:center;}
+.ahorro-acciones-grid a.btn-primary {display:flex;align-items:center;justify-content:center;border-radius:999px;padding:12px 20px;text-decoration:none;box-sizing:border-box;}

@@ -1,4 +1,3 @@
-@import '../styles/dashboard-shared';
 
 .error-banner {
   background: rgba(196, 61, 61, 0.1);
@@ -71,7 +70,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #fff;
+  background: var(--d-card, #fff);
   color: var(--d-ink);
   border-radius: 12px;
   padding: 14px 16px;
@@ -185,7 +184,7 @@
   border: none;
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  background: #fff;
+  background: var(--d-card, #fff);
   color: var(--d-ink);
 }
 
@@ -201,7 +200,7 @@
     padding: 8px 14px;
     border-radius: 999px;
     border: none;
-    background: #fff;
+    background: var(--d-card, #fff);
     color: var(--d-ink);
     font-family: 'Inter', sans-serif;
     font-size: 13px;
@@ -240,7 +239,7 @@
   }
 
   input:checked + .check-circle {
-    background: #fff;
+    background: var(--d-card, #fff);
 
     svg {
       opacity: 1;
@@ -254,7 +253,7 @@
   padding: 13px;
   border-radius: 999px;
   border: none;
-  background: #fff;
+  background: var(--d-card, #fff);
   color: var(--d-ink);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
@@ -301,4 +300,12 @@
   .metas-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.icon-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #ddd; margin-top: 8px; }
+.icon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(52px, 68px)); gap: 8px; margin: 6px 0 12px; }
+.icon-opt { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 1px solid var(--d-border); border-radius: 10px; background: var(--d-surface, #fbf7ee); color: var(--d-ink); cursor: pointer;
+ svg { width: 18px; height: 18px; }
+ &.active { background: var(--d-dark); color: #fff; border-color: #fff; }
+ &:hover { border-color: var(--d-accent); }
 }

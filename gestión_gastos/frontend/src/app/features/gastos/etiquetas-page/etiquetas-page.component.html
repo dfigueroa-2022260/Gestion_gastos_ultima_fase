@@ -11,12 +11,7 @@
 
 <div class="content-header">
   <h1>CASH TRACK <span>etiquetas</span></h1>
-  <div class="content-actions">
-    <button class="btn-filter" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
-      Filter
-    </button>
-  </div>
+  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
 <div class="error-banner" *ngIf="error()">{{ error() }}</div>
@@ -131,9 +126,16 @@
 
   <div class="historial-body">
     <div class="tags-strip">
-      <div class="tag-shape" *ngFor="let e of principales()">
+      <button type="button" class="tag-shape" *ngFor="let e of principales()"
+        (click)="seleccionar(e.id)" [attr.aria-label]="'Ver etiqueta ' + e.nombre"
+        [attr.aria-pressed]="e.id === seleccionadaId()" [title]="e.nombre">
+        <svg class="tag-outline" viewBox="0 0 76 174" aria-hidden="true">
+          <path class="tag-silhouette" d="M31 5 Q38 -1 45 5 L73 34 V160 Q73 171 62 171 H14 Q3 171 3 160 V34 Z" />
+          <path class="tag-border" d="M33 9 Q38 5 43 9 L69 36 V159 Q69 167 61 167 H15 Q7 167 7 159 V36 Z" />
+          <circle class="tag-hole" cx="38" cy="18" r="6" />
+        </svg>
         <span>{{ e.nombre }}</span>
-      </div>
+      </button>
       <p class="empty-hint light" *ngIf="!principales().length">Todavia no hay etiquetas para mostrar aqui.</p>
     </div>
 
@@ -149,7 +151,7 @@
       </div>
       <div class="calendario-grid">
         <span class="dia-semana" *ngFor="let d of diasSemana">{{ d }}</span>
-        <span class="dia-celda" *ngFor="let dia of diasCalendario()" [class.vacia]="!dia" [class.hoy]="esHoy(dia)">{{ dia ?? '' }}</span>
+        <span class="dia-celda" role="button" tabindex="0" (click)="seleccionarDia(dia)" (keydown.enter)="seleccionarDia(dia)" *ngFor="let dia of diasCalendario()" [class.vacia]="!dia" [class.hoy]="esHoy(dia)">{{ dia ?? '' }}</span>
       </div>
     </div>
   </div>

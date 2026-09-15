@@ -1,7 +1,6 @@
-@import '../styles/dashboard-shared';
 
 .consejo-card {
-  background: #fff;
+  background: var(--d-card, #fff);
   border: 1px solid var(--d-border);
   border-left: 4px solid var(--d-accent);
   border-radius: 10px;

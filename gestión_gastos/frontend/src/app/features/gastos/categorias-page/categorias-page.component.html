@@ -11,6 +11,7 @@
 
 <div class="content-header">
   <h1>CASH TRACK <span>categorias</span></h1>
+  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
 <div class="error-banner" *ngIf="error()">{{ error() }}</div>
@@ -106,13 +107,15 @@
 <div class="charts-grid single">
   <div class="chart-card">
     <h3>Gastos por categoria</h3>
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="none" *ngIf="resumenGastos().length; else sinDatos">
-      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
+    <div class="chart-scroll">
+    <svg class="line-chart" [attr.viewBox]="'0 0 ' + anchoGrafica() + ' 240'" [style.min-width.px]="anchoGrafica()" preserveAspectRatio="xMidYMid meet" *ngIf="resumenGastos().length; else sinDatos">
+      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" [attr.x2]="anchoGrafica() - 10" [attr.y2]="200 - f * 160" class="grid-line" />
       <ng-container *ngFor="let r of resumenGastos(); let i = index">
-        <rect [attr.x]="30 + i * 60 + 8" [attr.y]="yBarra(r.total)" width="28" [attr.height]="alturaBarra(r.total)" rx="4" [attr.fill]="r.color" />
-        <text [attr.x]="30 + i * 60 + 22" y="214" class="axis-label">{{ r.nombre }}</text>
+        <rect [attr.x]="30 + i * 70 + 26" [attr.y]="yBarra(r.total)" width="18" [attr.height]="alturaBarra(r.total)" rx="3" [attr.fill]="r.color"><title>{{r.nombre}}: Q{{r.total | number:"1.2-2"}}</title></rect>
+        <text [attr.x]="30 + i * 70 + 35" y="214" class="axis-label">{{ r.nombre.length > 10 ? (r.nombre | slice:0:9) + "…" : r.nombre }}</text>
       </ng-container>
     </svg>
+    </div>
     <ng-template #sinDatos>
       <p class="empty-hint">Todavia no hay gastos registrados para graficar.</p>
     </ng-template>

@@ -1,3 +1,8 @@
+import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
+import { enRango, resumir } from '../../../shared/registro.utils';
+import { inject } from '@angular/core';
+import { DialogService } from '../../../shared/dialog.service';
+import { hoyLocal, fechaPasada, descripcionObligatoria } from '../../../shared/registro.utils';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -37,14 +42,18 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-ahorro-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [TopFiltersComponent, CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './ahorro-page.component.html',
   styleUrl: './ahorro-page.component.scss',
 })
 export class AhorroPageComponent implements OnInit {
-  readonly ahorros = signal<Ahorro[]>([]);
+  readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
+  onRango(r: RangoFechas): void { this.rango.set(r); }
+  readonly dialog = inject(DialogService);
+  private readonly ahorrosTodos = signal<Ahorro[]>([]);
+  readonly ahorros = computed(() => this.ahorrosTodos().filter(r => enRango(r.fecha, this.rango())));
   readonly categorias = signal<Categoria[]>([]);
-  readonly resumenCategorias = signal<ResumenCategoria[]>([]);
+  readonly resumenCategorias = computed(() => resumir(this.ahorros()));
 
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
@@ -72,7 +81,7 @@ export class AhorroPageComponent implements OnInit {
     const ahora = new Date();
     return this.ahorros()
       .filter((i) => {
-        const f = new Date(i.fecha);
+        const f = new Date(i.fecha.slice(0, 10) + 'T12:00:00');
         return f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
       })
       .reduce((sum, i) => sum + (i.tipo === 'RETIRO' ? -Number(i.monto) : Number(i.monto)), 0);
@@ -82,8 +91,8 @@ export class AhorroPageComponent implements OnInit {
     const mapa = new Map<string, number>();
 
     for (const ahorro of this.ahorros()) {
-      const f = new Date(ahorro.fecha);
-      const clave = `${f.getFullYear()}-${f.getMonth()}`;
+      const f = new Date(ahorro.fecha.slice(0, 10) + 'T12:00:00');
+      const clave = `${f.getFullYear()}-${String(f.getMonth()).padStart(2, '0')}`;
       const signo = ahorro.tipo === 'RETIRO' ? -1 : 1;
       mapa.set(clave, (mapa.get(clave) ?? 0) + signo * Number(ahorro.monto));
     }
@@ -112,9 +121,9 @@ export class AhorroPageComponent implements OnInit {
   ) {
     this.form = this.fb.nonNullable.group({
       monto: [0, [Validators.required, Validators.min(0.01)]],
-      descripcion: [''],
+      descripcion: ['', [descripcionObligatoria]],
       categoriaId: ['', [Validators.required]],
-      fecha: [this.hoyISO()],
+      fecha: [this.hoyISO(), [fechaPasada]],
       tipo: ['DEPOSITO' as TipoAhorro],
     });
 
@@ -139,7 +148,7 @@ export class AhorroPageComponent implements OnInit {
 
     this.ahorroService.listar().subscribe({
       next: (ahorros) => {
-        this.ahorros.set(ahorros);
+        this.ahorrosTodos.set(ahorros);
         this.cargando.set(false);
       },
       error: () => {
@@ -148,13 +157,10 @@ export class AhorroPageComponent implements OnInit {
       },
     });
 
-    this.ahorroService.resumen().subscribe({
-      next: (resumen) => this.resumenCategorias.set(resumen),
-    });
   }
 
-  private hoyISO(): string {
-    return new Date().toISOString().slice(0, 10);
+  hoyISO(): string {
+    return hoyLocal();
   }
 
   // --- Alta / edicion -------------------------------------------------
@@ -185,8 +191,8 @@ export class AhorroPageComponent implements OnInit {
     this.mostrarForm.set(true);
   }
 
-  eliminar(ahorro: Ahorro): void {
-    const confirmado = confirm(
+  async eliminar(ahorro: Ahorro): Promise<void> {
+    const confirmado = await this.dialog.confirm(
       `¿Eliminar el registro de Q${Number(ahorro.monto).toFixed(2)}?`
     );
     if (!confirmado) return;
@@ -206,6 +212,7 @@ export class AhorroPageComponent implements OnInit {
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.errorForm.set('Revisa los campos: el monto debe ser mayor a 0, la descripción es obligatoria y la fecha no puede ser futura.');
       return;
     }
 
@@ -215,9 +222,9 @@ export class AhorroPageComponent implements OnInit {
     const raw = this.form.getRawValue();
     const payload = {
       monto: Number(raw.monto),
-      descripcion: raw.descripcion || undefined,
+      descripcion: raw.descripcion.trim(),
       categoriaId: raw.categoriaId,
-      fecha: raw.fecha ? new Date(raw.fecha).toISOString() : undefined,
+      fecha: raw.fecha ? raw.fecha + 'T00:00:00.000Z' : undefined,
       tipo: raw.tipo,
     };
 
@@ -278,18 +285,18 @@ export class AhorroPageComponent implements OnInit {
   // --- Helpers para el donut ----------------------------------------------
 
   donutLargo(total: number): number {
-    const circunferencia = 251;
+    const circunferencia = 2 * Math.PI * 40;
     const pct = this.totalResumen() > 0 ? (Number(total) / this.totalResumen()) * 100 : 0;
     return (pct / 100) * circunferencia;
   }
 
   donutOffset(index: number): number {
-    const circunferencia = 251;
+    const circunferencia = 2 * Math.PI * 40;
     const acumulado = this.resumenCategorias()
       .slice(0, index)
       .reduce((sum, r) => sum + Number(r.total), 0);
     const pct = this.totalResumen() > 0 ? (acumulado / this.totalResumen()) * 100 : 0;
-    return circunferencia - (pct / 100) * circunferencia;
+    return -(pct / 100) * circunferencia;
   }
 
   porcentaje(total: number): number {

@@ -1,3 +1,8 @@
+import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
+import { enRango, resumir } from '../../../shared/registro.utils';
+import { Gasto } from '../gastos-page/gasto.models';
+import { inject } from '@angular/core';
+import { DialogService } from '../../../shared/dialog.service';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import {
@@ -34,13 +39,17 @@ export const ICONOS_CATEGORIA = [
 @Component({
   selector: 'app-categorias-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './categorias-page.component.html',
   styleUrl: './categorias-page.component.scss',
 })
 export class CategoriasPageComponent implements OnInit {
+  readonly dialog = inject(DialogService);
   readonly categorias = signal<Categoria[]>([]);
-  readonly resumenGastos = signal<ResumenCategoria[]>([]);
+  readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
+  readonly movimientos = signal<Gasto[]>([]);
+  readonly resumenGastos = computed(() => resumir(this.movimientos().filter(g => enRango(g.fecha,this.rango()))));
+  onRango(r: RangoFechas): void { this.rango.set(r); }
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -87,7 +96,7 @@ export class CategoriasPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.gastoService.resumen().subscribe({ next: (r) => this.resumenGastos.set(r) });
+    this.gastoService.listar().subscribe({ next: (r) => this.movimientos.set(r), error: () => this.error.set("No se pudieron cargar los movimientos.") });
   }
 
   private cargar(): void {
@@ -176,8 +185,8 @@ export class CategoriasPageComponent implements OnInit {
       });
   }
 
-  editarSubcategoria(sub: Categoria): void {
-    const nuevoNombre = prompt('Nuevo nombre de la subcategoria:', sub.nombre);
+  async editarSubcategoria(sub: Categoria): Promise<void> {
+    const nuevoNombre = await this.dialog.prompt('Nuevo nombre de la subcategoria:', sub.nombre);
     if (!nuevoNombre || nuevoNombre.trim() === sub.nombre) return;
 
     this.categoriaService
@@ -188,19 +197,21 @@ export class CategoriasPageComponent implements OnInit {
             lista.map((c) => (c.id === actualizada.id ? actualizada : c))
           );
         },
-        error: () => this.error.set('No se pudo actualizar la subcategoria.'),
+        error: (err) => this.error.set(err?.error?.error ?? 'No se pudo actualizar la subcategoria.'),
       });
   }
 
-  eliminarSubcategoria(sub: Categoria): void {
-    const confirmado = confirm(`¿Eliminar la subcategoria "${sub.nombre}"?`);
+  async eliminarSubcategoria(sub: Categoria): Promise<void> {
+    const confirmado = await this.dialog.confirm(`¿Eliminar la subcategoria "${sub.nombre}"?`);
     if (!confirmado) return;
 
     this.categoriaService.eliminar(sub.id).subscribe({
       next: () => this.categorias.update((lista) => lista.filter((c) => c.id !== sub.id)),
-      error: () => this.error.set('No se pudo eliminar la subcategoria.'),
+      error: (err) => this.error.set(err?.error?.error ?? 'No se pudo eliminar la subcategoria.'),
     });
   }
+
+  readonly anchoGrafica = computed(() => Math.max(460, 40 + this.resumenGastos().length * 70));
 
   alturaBarra(total: number): number {
     return (Number(total) / this.maxValorMes()) * 160;

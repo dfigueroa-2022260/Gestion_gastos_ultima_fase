@@ -1,3 +1,6 @@
+import { FormsModule } from '@angular/forms';
+import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
+import { enRango, resumir } from '../../../shared/registro.utils';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { Ahorro } from '../ahorro-page/ahorro.models';
@@ -11,6 +14,7 @@ interface PuntoMes {
   label: string;
   gasto: number;
   ingreso: number;
+  ahorro: number;
 }
 
 const NOMBRES_MES = [
@@ -25,15 +29,36 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-reportes-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [FormsModule, TopFiltersComponent, CommonModule],
   templateUrl: './reportes-page.component.html',
   styleUrl: './reportes-page.component.scss',
 })
 export class ReportesPageComponent implements OnInit {
-  readonly gastos = signal<Gasto[]>([]);
-  readonly ingresos = signal<Ingreso[]>([]);
-  readonly ahorros = signal<Ahorro[]>([]);
-  readonly resumenGastos = signal<ResumenCategoria[]>([]);
+  readonly filtrosAbiertos = signal(false);
+  readonly tipo = signal('todos');
+  readonly categoria = signal('');
+  readonly busqueda = signal('');
+  readonly minimo = signal<number | null>(null);
+  readonly maximo = signal<number | null>(null);
+  readonly categoriasFiltro = computed(() => Array.from(new Map([...this.gastosTodos(), ...this.ingresosTodos(), ...this.ahorrosTodos()].map(r => [r.categoriaId, r.categoria])).values()).sort((a,b) => a.nombre.localeCompare(b.nombre)));
+  readonly rangoMontoInvalido = computed(() => this.minimo() !== null && this.maximo() !== null && this.minimo()! > this.maximo()!);
+  readonly filtrosActivos = computed(() => this.tipo() !== 'todos' || !!this.categoria() || !!this.busqueda() || this.minimo() !== null || this.maximo() !== null);
+  limpiarFiltros(): void { this.tipo.set('todos'); this.categoria.set(''); this.busqueda.set(''); this.minimo.set(null); this.maximo.set(null); }
+  coincide(r: Gasto | Ingreso | Ahorro, tipo: string): boolean {
+    return !this.rangoMontoInvalido() && enRango(r.fecha, this.rango()) && (this.tipo() === 'todos' || this.tipo() === tipo)
+      && (!this.categoria() || r.categoriaId === this.categoria())
+      && (!this.busqueda().trim() || (r.descripcion ?? '').toLocaleLowerCase().includes(this.busqueda().trim().toLocaleLowerCase()))
+      && (this.minimo() === null || Number(r.monto) >= this.minimo()!) && (this.maximo() === null || Number(r.monto) <= this.maximo()!);
+  }
+  readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
+  onRango(r: RangoFechas): void { this.rango.set(r); }
+  private readonly gastosTodos = signal<Gasto[]>([]);
+  readonly gastos = computed(() => this.gastosTodos().filter(r => this.coincide(r, 'gastos')));
+  private readonly ingresosTodos = signal<Ingreso[]>([]);
+  readonly ingresos = computed(() => this.ingresosTodos().filter(r => this.coincide(r, 'ingresos')));
+  private readonly ahorrosTodos = signal<Ahorro[]>([]);
+  readonly ahorros = computed(() => this.ahorrosTodos().filter(r => this.coincide(r, 'ahorros')));
+  readonly resumenGastos = computed(() => resumir(this.gastos()));
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -61,30 +86,31 @@ export class ReportesPageComponent implements OnInit {
   );
 
   readonly datosPorMes = computed<PuntoMes[]>(() => {
-    const mapa = new Map<string, { gasto: number; ingreso: number }>();
+    const mapa = new Map<string, { gasto: number; ingreso: number; ahorro: number }>();
 
-    const acumular = (fechaStr: string, campo: 'gasto' | 'ingreso', monto: number) => {
-      const f = new Date(fechaStr);
-      const clave = `${f.getFullYear()}-${f.getMonth()}`;
-      const actual = mapa.get(clave) ?? { gasto: 0, ingreso: 0 };
+    const acumular = (fechaStr: string, campo: 'gasto' | 'ingreso' | 'ahorro', monto: number) => {
+      const f = new Date(fechaStr.slice(0, 10) + 'T12:00:00');
+      const clave = `${f.getFullYear()}-${String(f.getMonth()).padStart(2, '0')}`;
+      const actual = mapa.get(clave) ?? { gasto: 0, ingreso: 0, ahorro: 0 };
       actual[campo] += monto;
       mapa.set(clave, actual);
     };
 
     this.gastos().forEach((g) => acumular(g.fecha, 'gasto', Number(g.monto)));
     this.ingresos().forEach((i) => acumular(i.fecha, 'ingreso', Number(i.monto)));
+    this.ahorros().forEach(a => acumular(a.fecha, 'ahorro', Number(a.monto) * (a.tipo === 'RETIRO' ? -1 : 1)));
 
     return Array.from(mapa.entries())
       .sort((a, b) => (a[0] > b[0] ? 1 : -1))
       .slice(-6)
       .map(([clave, val]) => {
         const mes = Number(clave.split('-')[1]);
-        return { label: NOMBRES_MES[mes].slice(0, 3), ...val };
+        return { label: NOMBRES_MES[mes].slice(0, 3) + " " + clave.slice(2,4), ...val };
       });
   });
 
   readonly maxValorMes = computed(() => {
-    const valores = this.datosPorMes().flatMap((p) => [p.gasto, p.ingreso]);
+    const valores = this.datosPorMes().flatMap((p) => [p.gasto, p.ingreso, p.ahorro]);
     return Math.max(...valores, 1);
   });
 
@@ -96,40 +122,36 @@ export class ReportesPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.gastoService.listar().subscribe({
-      next: (g) => this.gastos.set(g),
+      next: (g) => this.gastosTodos.set(g),
       error: () => this.error.set('No se pudieron cargar todos los datos.'),
     });
-    this.gastoService.resumen().subscribe({ next: (r) => this.resumenGastos.set(r) });
-    this.ingresoService.listar().subscribe({ next: (i) => this.ingresos.set(i) });
+    this.ingresoService.listar().subscribe({ next: (i) => this.ingresosTodos.set(i), error: () => this.error.set('No se pudieron cargar los ingresos.') });
     this.ahorroService.listar().subscribe({
       next: (a) => {
-        this.ahorros.set(a);
+        this.ahorrosTodos.set(a);
         this.cargando.set(false);
       },
-      error: () => this.cargando.set(false),
+      error: () => { this.cargando.set(false); this.error.set('No se pudieron cargar los ahorros.'); },
     });
   }
 
-  alturaBarra(valor: number): number {
-    return (valor / this.maxValorMes()) * 160;
-  }
-
-  yBarra(valor: number): number {
-    return 200 - this.alturaBarra(valor);
-  }
+  readonly minValorMes = computed(() => Math.min(0, ...this.datosPorMes().map(p => p.ahorro)));
+  yValor(valor: number): number { return 200 - (valor - this.minValorMes()) / (this.maxValorMes() - this.minValorMes()) * 160; }
+  alturaBarra(valor: number): number { return Math.abs(this.yValor(valor) - this.yValor(0)); }
+  yBarra(valor: number): number { return Math.min(this.yValor(valor), this.yValor(0)); }
 
   donutLargo(total: number): number {
-    const circunferencia = 176; // 2 * PI * 28 (radio usado en el template)
+    const circunferencia = 2 * Math.PI * 28; // 2 * PI * 28 (radio usado en el template)
     const pct = this.totalResumen() > 0 ? (Number(total) / this.totalResumen()) * 100 : 0;
     return (pct / 100) * circunferencia;
   }
 
   donutOffset(index: number): number {
-    const circunferencia = 176;
+    const circunferencia = 2 * Math.PI * 28;
     const acumulado = this.resumenGastos()
       .slice(0, index)
       .reduce((s, r) => s + Number(r.total), 0);
     const pct = this.totalResumen() > 0 ? (acumulado / this.totalResumen()) * 100 : 0;
-    return circunferencia - (pct / 100) * circunferencia;
+    return -(pct / 100) * circunferencia;
   }
 }

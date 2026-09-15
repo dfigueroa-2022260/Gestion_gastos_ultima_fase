@@ -1,3 +1,4 @@
+@use 'app/features/gastos/styles/dashboard-shared' as dashboard;
 /* Reset global: sin esto, el margen por defecto del navegador en <body>
    deja ver un borde blanco alrededor de toda la app. */
 * {
@@ -15,3 +16,47 @@ body {
 body {
   font-family: 'Inter', sans-serif;
 }
+
+.icon-btn-sm:not(.danger), .header-btn, .btn-secondary {background:var(--d-dark,#2B2A28) !important;color:#fff !important;}
+a.btn-secondary-dark,a.btn-secondary {display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:999px;text-decoration:none;margin:8px 0;}
+button:focus-visible,a:focus-visible {outline:3px solid #E8672A;outline-offset:3px;}
+
+.dia-celda[role=button]:not(.vacia) {cursor:pointer;}
+.dia-celda[role=button]:hover {outline:2px solid var(--d-accent);}
+
+app-gastos-home .header-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 8px 16px; border: 1px solid transparent; border-radius: 999px; font-family: inherit; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; }
+app-gastos-home .header-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* Preferences and activity panels share the dashboard palette. */
+app-gastos-home .utility-overlay { position: fixed; inset: 0; z-index: 1100; background: #0007; backdrop-filter: blur(3px); display: grid; place-items: center; padding: 20px; }
+app-gastos-home .utility-panel { background: var(--d-card); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 18px; width: min(480px,100%); padding: 24px; max-height: 85vh; overflow: auto; box-shadow: 0 20px 60px #0003; }
+app-gastos-home .utility-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; h2 { margin: 0; font-size: 22px; } }
+app-gastos-home .utility-panel h3 { margin: 0 0 8px; font-size: 16px; }
+app-gastos-home .utility-panel p { font-size: 13px; color: var(--d-ink-soft); line-height: 1.5; }
+app-gastos-home .close-utility { width: 32px; height: 32px; border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-ink); border-radius: 50%; font-size: 22px; cursor: pointer; }
+app-gastos-home .theme-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0 24px; }
+app-gastos-home .theme-option { padding: 8px; border: 2px solid var(--d-border); background: var(--d-surface); border-radius: 12px; color: var(--d-ink); font: inherit; font-size: 13px; cursor: pointer; &.selected { border-color: var(--d-accent); } }
+app-gastos-home .theme-preview { display: flex; position: relative; align-items: flex-end; gap: 8px; height: 80px; border-radius: 7px; margin-bottom: 8px; padding: 14px; overflow: hidden; background: #f3ead9; border-left: 22px solid #d6b59a; i { width: 20%; height: 32px; border-radius: 4px; background: #e2672e; } i:nth-child(2) { height: 48px; background: #fff; } i:nth-child(3) { height: 22px; background: #b7a28e; } &.dark-preview { background: #292826; border-left-color: #171615; i:nth-child(2) { background: #585149; } } }
+app-gastos-home .notification-setting { display: flex; align-items: center; gap: 16px; justify-content: space-between; border-top: 1px solid var(--d-border); padding-top: 20px; font-size: 13px; small { display: block; margin-top: 5px; color: var(--d-ink-soft); line-height: 1.5; } input { width: 20px; height: 20px; accent-color: var(--d-accent); flex-shrink: 0; } }
+app-gastos-home .utility-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; button { padding: 8px 14px; background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 999px; font: inherit; font-size: 12px; cursor: pointer; &:disabled { opacity: .5; cursor: default; } } }
+app-gastos-home .notification-list { display: flex; flex-direction: column; gap: 8px; article { padding: 14px; border: 1px solid var(--d-border); border-radius: 10px; background: var(--d-surface); &.unread { border-left: 3px solid var(--d-accent); } strong { display: block; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; } small { display: block; margin-top: 6px; font-size: 11px; color: var(--d-ink-soft); } } }
+app-gastos-home .local-notice { font-size: 11px !important; }
+app-gastos-home .notification-count { border-radius: 999px; padding: 3px 6px; background: var(--d-accent); color: #fff; font-size: 11px; font-weight: 700; margin-left: -20px; align-self: flex-start; pointer-events: none; }
+app-gastos-home .movement-toast { position: fixed; right: 24px; bottom: 24px; z-index: 1200; width: min(420px,calc(100vw - 32px)); display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 12px; background: var(--d-card); border: 1px solid var(--d-border); border-left: 4px solid var(--d-accent); color: var(--d-ink); box-shadow: 0 8px 32px #0003; font-size: 13px; line-height: 1.5; span { flex: 1; overflow-wrap: anywhere; } button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 22px; } }
+app-gastos-home .menu-colapsado .sidebar { width: 100px; padding-inline: 8px; .nav-item { font-size: 10px; flex-direction: column; gap: 4px; padding-inline: 3px; } .sidebar-top { gap: 4px; flex-wrap: wrap; } }
+html.dark-theme { background: #191817; }
+html.dark-theme body { background: #191817; }
+html.dark-theme app-gastos-home { --d-bg: #191817; --d-card: #272522; --d-surface: #322f2a; --d-ink: #f5eee3; --d-ink-soft: #bcb3a6; --d-border: #4b443a; --d-dark: #121211; --d-dark-soft: #242220; }
+html.dark-theme app-gastos-home :is(input,select,textarea) { color: var(--d-ink); background: var(--d-surface); border-color: var(--d-border); }
+html.dark-theme app-gastos-home :is(.topbar,.perfil-panel,.search-panel,.calendario-mini) { background: var(--d-card); color: var(--d-ink); }
+html.dark-theme app-gastos-home .line-dark { stroke: #cbc2b5; }
+html.dark-theme app-gastos-home .mini-icon { color: var(--d-ink); }
+html.dark-theme app-dialog section { background: #272522; color: #f5eee3; border-color: #4b443a; }
+html.dark-theme app-dialog p { color: #bcb3a6; }
+html.dark-theme app-dialog input { background: #322f2a; color: #f5eee3; border-color: #4b443a; }
+html.dark-theme app-dialog button:not([type=submit]) { background: #322f2a; color: #f5eee3; border-color: #4b443a; }
+
+html.dark-theme app-gastos-home { --d-chart-expense: #bcb3a6; }
+
+app-gastos-home .sidebar-top .icon-circle { position: relative; }
+app-gastos-home .notification-count { position: absolute; top: -5px; right: -6px; margin: 0; }

@@ -1,3 +1,7 @@
+import { FocusPanelDirective } from '../../shared/focus-panel.directive';
+import { inject } from '@angular/core';
+import { PreferencesService } from '../../core/services/preferences.service';
+import { NotificationsService } from '../../core/services/notifications.service';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -35,11 +39,16 @@ interface ResultadoBusqueda {
 @Component({
   selector: 'app-gastos-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [FocusPanelDirective, CommonModule, FormsModule, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './gastos-home.component.html',
   styleUrl: './gastos-home.component.scss',
 })
 export class GastosHomeComponent implements OnInit {
+  readonly preferencias = inject(PreferencesService);
+  readonly notificaciones = inject(NotificationsService);
+  readonly configuracionAbierta = signal(false);
+  readonly notificacionesAbiertas = signal(false);
+  readonly menuColapsado = signal(false);
   readonly itemsSidebar: ItemSidebar[] = [
     { icono: 'home', label: 'Home', ruta: '/gastos', exact: true },
     { icono: 'chart', label: 'Resumen', ruta: '/gastos/resumen' },

@@ -1,5 +1,6 @@
 export interface Etiqueta {
   id: string;
+  createdAt: string;
   nombre: string;
   color: string;
   icono: string;

@@ -1,3 +1,4 @@
+import planRoutes from './modules/planes/plan.routes';
 import cors from "cors";
 import express from "express";
 import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
@@ -27,6 +28,7 @@ app.use("/api/gastos", gastoRoutes);
 app.use("/api/ingresos", ingresoRoutes);
 app.use("/api/ahorros", ahorroRoutes);
 app.use("/api/metas", metaRoutes);
+app.use("/api/planes", planRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

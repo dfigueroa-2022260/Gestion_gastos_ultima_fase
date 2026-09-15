@@ -1,6 +1,6 @@
 <div class="content-header">
   <h1>CASH TRACK <span>Principal</span></h1>
-  <app-top-filters (rangoChange)="onRango($event)"></app-top-filters>
+  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
 <button class="tip-banner" type="button" (click)="toggleConsejo()">
@@ -60,11 +60,11 @@
 <div class="charts-grid">
   <div class="chart-card">
     <h3>Gastos e ingresos por mes</h3>
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="none" *ngIf="datosPorMes().length; else sinDatosMes">
+    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="xMidYMid meet" *ngIf="datosPorMes().length; else sinDatosMes">
       <line *ngFor="let f of [0, 40, 80, 120, 160]" x1="30" [attr.y1]="190 - f" x2="450" [attr.y2]="190 - f" class="grid-line" />
       <ng-container *ngFor="let p of datosPorMes(); let i = index">
-        <rect [attr.x]="30 + i * 60 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="3" fill="var(--d-dark)" />
-        <rect [attr.x]="30 + i * 60 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="3" fill="var(--d-accent)" />
+        <rect [attr.x]="30 + i * 60 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="8" fill="var(--d-dark)" />
+        <rect [attr.x]="30 + i * 60 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="8" fill="var(--d-accent)" />
         <text [attr.x]="30 + i * 60 + 24" y="208" class="axis-label">{{ p.label }}</text>
       </ng-container>
     </svg>
@@ -81,11 +81,12 @@
         <strong>Q{{ totalResumenCategorias() | number: '1.0-2' }}</strong>
       </div>
       <svg class="donut-chart" viewBox="0 0 100 100">
+        <text *ngIf="resumenGastos().length === 1" x="50" y="53" text-anchor="middle" font-size="10" fill="currentColor">100%</text>
         <circle
           *ngFor="let seg of resumenGastos(); let i = index"
           cx="50" cy="50" r="40" fill="none"
           [attr.stroke]="seg.color" stroke-width="14"
-          [attr.stroke-dasharray]="donutLargo(seg.total) + ' 251'"
+          [attr.stroke-dasharray]="donutLargo(seg.total) + ' ' + (2 * 3.141592653589793 * 40)"
           [attr.stroke-dashoffset]="donutOffset(i)"
           transform="rotate(-90 50 50)"
         />

@@ -1,13 +1,18 @@
 <div class="content-header">
   <h1>CASH TRACK <span>Resumen</span></h1>
-  <div class="content-actions">
-    <button class="btn-filter" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
-      Filter
-    </button>
-  </div>
+  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
+<div class="form-card" *ngIf="tipoPlan()">
+ <h3>{{tipoPlan()==='CUENTA'?'Agregar cuenta':tipoPlan()==='PROXIMO'?'Gasto próximo':'Crear presupuesto mensual'}}</h3>
+ <form (ngSubmit)="guardarPlan()" class="form-grid">
+ <div class="form-field"><label for="nombrePlan">Descripción</label><input id="nombrePlan" name="nombrePlan" [(ngModel)]="nombrePlan" placeholder="Ej. Cuenta de ahorro" required /></div>
+ <div class="form-field"><label for="montoPlan">Monto (Q)</label><input id="montoPlan" name="montoPlan" type="number" min="0.01" max="99999999.99" step="0.01" [(ngModel)]="montoPlan" placeholder="0.00" required /></div>
+ <div class="form-field" *ngIf="tipoPlan()!=='CUENTA'"><label for="fechaPlan">Fecha</label><input id="fechaPlan" name="fechaPlan" type="date" [(ngModel)]="fechaPlan" required /></div>
+ <div class="form-actions"><button type="submit" class="btn-primary" [disabled]="guardandoPlan()">{{guardandoPlan()?'Guardando...':'Guardar'}}</button><button type="button" class="btn-secondary" [disabled]="guardandoPlan()" (click)="tipoPlan.set(null)">Cancelar</button></div>
+ </form>
+</div>
+<p *ngIf="cargando()" role="status">Cargando resumen...</p>
 <div class="resumen-grid">
   <div class="stat-card highlight">
     <div class="stat-top">
@@ -20,22 +25,22 @@
   </div>
 
   <div class="stat-card list-card">
-    <h4>Saldos por cuenta</h4>
-    <div class="mini-row" *ngFor="let c of cuentasEjemplo">
-      <span>{{ c.nombre }}</span>
-      <strong>{{ c.saldo | number: '1.0-0' }}</strong>
+    <h4>Saldos por cuenta</h4><button class="btn-primary" (click)="abrirPlan('CUENTA')">Agregar cuenta</button>
+    <div class="mini-row" *ngFor="let c of cuentas()">
+      <span>{{ c.nombre }}</span><button type="button" (click)="eliminarPlan(c)" aria-label="Eliminar cuenta">×</button>
+      <strong>Q{{ c.monto | number: '1.0-0' }}</strong>
     </div>
   </div>
 
   <div class="stat-card ejemplo-card">
     <h4>Gastos próximos</h4>
-    <div class="mini-row" *ngFor="let g of gastosProximosEjemplo">
-      <span>{{ g.nombre }}</span>
-      <strong>{{ g.monto | number: '1.0-0' }}</strong>
+    <div class="mini-row" *ngFor="let g of proximos()">
+      <span>{{ g.nombre }} · {{g.fecha | date: 'dd/MM/yyyy':'UTC'}}</span><button type="button" (click)="eliminarPlan(g)" aria-label="Eliminar gasto próximo">×</button>
+      <strong>Q{{ g.monto | number: '1.0-0' }}</strong>
     </div>
     <div class="ejemplo-acciones">
-      <button class="btn-primary" type="button" disabled title="Proximamente">Crear presupuesto</button>
-      <button class="btn-secondary-dark" type="button" disabled title="Proximamente">Añadir entrada</button>
+      <button class="btn-primary" type="button" (click)="abrirPlan('PRESUPUESTO')">Crear presupuesto</button>
+      <button class="btn-secondary-dark" type="button" (click)="abrirPlan('PROXIMO')">Añadir entrada</button>
     </div>
   </div>
 
@@ -50,22 +55,22 @@
   </div>
 
   <div class="stat-card">
-    <h4>Gastos de este mes</h4>
+    <h4>Gastos del período</h4>
     <p class="pct-label">{{ gastosDelMesPct() }}% de ingresos</p>
     <div class="progress-track">
-      <div class="progress-fill" [style.width.%]="gastosDelMesPct()"></div>
+      <div class="progress-fill" [style.width.%]="gastosDelMesPct() > 100 ? 100 : gastosDelMesPct()"></div>
     </div>
   </div>
 </div>
 
 <div class="charts-grid">
   <div class="chart-card">
-    <h3>Gastos y ganancias del mes</h3>
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="none" *ngIf="datosPorMes().length; else sinDatos">
+    <h3>Gastos e ingresos del período</h3>
+    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="xMidYMid meet" *ngIf="datosPorMes().length; else sinDatos">
       <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
       <ng-container *ngFor="let p of datosPorMes(); let i = index">
-        <rect [attr.x]="30 + i * 70 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="3" fill="var(--d-dark)" />
-        <rect [attr.x]="30 + i * 70 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="3" fill="var(--d-accent)" />
+        <rect [attr.x]="30 + i * 70 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="8" fill="var(--d-dark)" />
+        <rect [attr.x]="30 + i * 70 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="8" fill="var(--d-accent)" />
         <text [attr.x]="30 + i * 70 + 24" y="214" class="axis-label">{{ p.label }}</text>
       </ng-container>
     </svg>
@@ -91,7 +96,7 @@
     <div class="calendario-grid">
       <span class="dia-semana" *ngFor="let d of diasSemana">{{ d }}</span>
       <span
-        class="dia-celda"
+        class="dia-celda" role="button" tabindex="0" (click)="seleccionarDia(dia)" (keydown.enter)="seleccionarDia(dia)" (keydown.space)="$event.preventDefault(); seleccionarDia(dia)" [class.seleccionado]="diaSeleccionado(dia)" [attr.aria-pressed]="diaSeleccionado(dia)"
         *ngFor="let dia of diasCalendario()"
         [class.vacia]="!dia"
         [class.hoy]="esHoy(dia)"
@@ -99,3 +104,25 @@
     </div>
   </div>
 </div>
+
+<p class="error-banner" role="alert" *ngIf="error()">{{error()}}</p>
+<section class="chart-card detail-card">
+ <div class="section-heading"><h3>Presupuestos mensuales</h3><span class="count-badge">{{presupuestos().length}}</span></div>
+ <div class="section-empty" *ngIf="!presupuestos().length"><strong>Organizá tus próximos gastos</strong><p>Todavía no hay presupuestos en este período.</p><button type="button" class="btn-primary" (click)="abrirPlan('PRESUPUESTO')">Crear presupuesto</button></div>
+ <div class="budget-list">
+ <article class="budget-item" *ngFor="let p of presupuestos()">
+ <div class="budget-heading"><div><strong>{{p.nombre}}</strong><small>{{p.fecha | date:'MM/yyyy':'UTC'}}</small></div><button type="button" class="btn-secondary" (click)="eliminarPlan(p)">Eliminar</button></div>
+ <div class="budget-amounts"><span>Gastado <strong>Q{{gastoPresupuesto(p) | number:'1.2-2'}}</strong></span><span>Presupuesto <strong>Q{{p.monto | number:'1.2-2'}}</strong></span></div>
+ <div class="progress-track"><div class="progress-fill" [style.width.%]="gastoPresupuesto(p) / +p.monto * 100 > 100 ? 100 : gastoPresupuesto(p) / +p.monto * 100"></div></div>
+ <small class="budget-remaining" [class.over-budget]="gastoPresupuesto(p) > +p.monto">Disponible Q{{+p.monto-gastoPresupuesto(p) | number:'1.2-2'}}</small>
+ </article></div>
+</section>
+<section class="chart-card detail-card">
+ <div class="section-heading"><h3>Registros del período seleccionado</h3><span class="count-badge">{{gastos().length + ingresos().length + ahorros().length}}</span></div>
+ <div class="section-empty" *ngIf="!gastos().length && !ingresos().length && !ahorros().length"><p>No hay movimientos en este período.</p></div>
+ <div class="movement-list">
+ <div class="movement-row" *ngFor="let g of gastos()"><span class="movement-type expense">Gasto</span><div class="movement-info"><strong>{{g.descripcion || 'Gasto sin descripción'}}</strong><small>{{g.fecha | date:'dd/MM/yyyy':'UTC'}}</small></div><strong class="movement-amount">Q{{g.monto | number:'1.2-2'}}</strong></div>
+<div class="movement-row" *ngFor="let i of ingresos()"><span class="movement-type income">Ingreso</span><div class="movement-info"><strong>{{i.descripcion || 'Ingreso sin descripción'}}</strong><small>{{i.fecha | date:'dd/MM/yyyy':'UTC'}}</small></div><strong class="movement-amount">Q{{i.monto | number:'1.2-2'}}</strong></div>
+<div class="movement-row" *ngFor="let a of ahorros()"><span class="movement-type saving">Ahorro</span><div class="movement-info"><strong>{{a.descripcion || 'Ahorro sin descripción'}}</strong><small>{{a.fecha | date:'dd/MM/yyyy':'UTC'}} · {{a.tipo === "RETIRO" ? "Retiro" : "Depósito"}}</small></div><strong class="movement-amount">Q{{a.monto | number:'1.2-2'}}</strong></div>
+ </div>
+</section>

@@ -1,3 +1,4 @@
+import { Router, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
@@ -28,7 +29,24 @@ export class AuthService {
 
   private temporizadorExpiracion: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private readonly http: HttpClient) {
+  private readonly inactividadMs = 15 * 60 * 1000;
+  private ultimaActividad = Date.now();
+  private renovando = false;
+  private temporizadorInactividad: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(private readonly http: HttpClient, router: Router) {
+    const guardada = Number(localStorage.getItem('cash_track_actividad'));
+    this.ultimaActividad = guardada || Date.now();
+    for (const evento of ['pointerdown', 'keydown', 'scroll', 'touchstart']) {
+      window.addEventListener(evento, () => this.registrarActividad(), {passive:true});
+    }
+    router.events.subscribe(e => { if (e instanceof NavigationEnd) this.registrarActividad(); });
+    window.addEventListener('storage', e => {
+      if (e.key === 'cash_track_actividad' && e.newValue) { this.ultimaActividad = Number(e.newValue); this.programarInactividad(); }
+      if (e.key === TOKEN_KEY && !e.newValue) this.logout();
+      if (e.key === TOKEN_KEY && e.newValue) this.programarExpiracion(e.newValue);
+    });
+    this.programarInactividad();
     // Si ya habia una sesion guardada (ej. recargaste la pagina), reprograma
     // el vencimiento en base al tiempo que le queda al token real.
     const token = this.obtenerToken();
@@ -59,6 +77,7 @@ export class AuthService {
 
   logout(): void {
     this.cancelarTemporizador();
+    if(this.temporizadorInactividad) clearTimeout(this.temporizadorInactividad);
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USUARIO_KEY);
     this.usuario.set(null);
@@ -98,7 +117,34 @@ export class AuthService {
     localStorage.setItem(USUARIO_KEY, JSON.stringify(res.usuario));
     this.usuario.set(res.usuario);
     this.sesionExpirada.set(false);
+    this.ultimaActividad = Date.now();
+    localStorage.setItem("cash_track_actividad", String(this.ultimaActividad));
+    this.programarInactividad();
     this.programarExpiracion(res.token);
+  }
+
+  private registrarActividad(): void {
+    const token = this.obtenerToken();
+    if (!token) return;
+    if(Date.now() - this.ultimaActividad >= this.inactividadMs) { this.expirarSesion(); return; }
+    this.ultimaActividad = Date.now();
+    localStorage.setItem('cash_track_actividad', String(this.ultimaActividad));
+    this.programarInactividad();
+    const exp = decodeJwtPayload(token)?.exp;
+    if(exp && exp * 1000 - Date.now() < 5 * 60 * 1000 && !this.renovando) {
+      this.renovando = true;
+      this.http.post<{token:string}>(this.baseUrl + '/renovar', {}).subscribe({
+        next: res => { this.renovando = false; if (!this.obtenerToken()) return; localStorage.setItem(TOKEN_KEY,res.token); this.programarExpiracion(res.token); },
+        error: () => { this.renovando = false; }
+      });
+    }
+  }
+  private programarInactividad(): void {
+    if(this.temporizadorInactividad) clearTimeout(this.temporizadorInactividad);
+    if(!this.obtenerToken()) return;
+    const restante = this.inactividadMs - (Date.now() - this.ultimaActividad);
+    if(restante <= 0) { this.expirarSesion(); return; }
+    this.temporizadorInactividad = setTimeout(() => this.expirarSesion(), restante);
   }
 
   private leerUsuarioGuardado(): Usuario | null {

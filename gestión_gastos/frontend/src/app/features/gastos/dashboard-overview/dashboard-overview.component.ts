@@ -1,3 +1,4 @@
+import { resumir } from '../../../shared/registro.utils';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { PerfilPanelService } from '../../../core/services/perfil-panel.service';
@@ -45,7 +46,7 @@ export class DashboardOverviewComponent implements OnInit {
   private readonly gastosSinFiltrar = signal<Gasto[]>([]);
   private readonly ingresosSinFiltrar = signal<Ingreso[]>([]);
   private readonly ahorrosSinFiltrar = signal<Ahorro[]>([]);
-  readonly resumenGastos = signal<ResumenCategoria[]>([]);
+  readonly resumenGastos = computed(() => resumir(this.gastos()));
   readonly metas = signal<Meta[]>([]);
   readonly cargando = signal(true);
 
@@ -67,7 +68,7 @@ export class DashboardOverviewComponent implements OnInit {
   readonly totalAhorros = computed(() =>
     this.ahorros().reduce((s, a) => s + (a.tipo === 'RETIRO' ? -Number(a.monto) : Number(a.monto)), 0)
   );
-  readonly saldo = computed(() => this.totalIngresos() - this.totalGastos() + this.totalAhorros());
+  readonly saldo = computed(() => this.totalIngresos() - this.totalGastos());
 
   readonly gastosDelMesPct = computed(() => {
     if (this.totalIngresos() === 0) return 0;
@@ -87,8 +88,8 @@ export class DashboardOverviewComponent implements OnInit {
   readonly datosPorMes = computed<PuntoMes[]>(() => {
     const mapa = new Map<string, { gasto: number; ingreso: number }>();
     const acumular = (fechaStr: string, campo: 'gasto' | 'ingreso', monto: number) => {
-      const f = new Date(fechaStr);
-      const clave = `${f.getFullYear()}-${f.getMonth()}`;
+      const f = new Date(fechaStr.slice(0, 10) + 'T12:00:00');
+      const clave = `${f.getFullYear()}-${String(f.getMonth()).padStart(2, '0')}`;
       const actual = mapa.get(clave) ?? { gasto: 0, ingreso: 0 };
       actual[campo] += monto;
       mapa.set(clave, actual);
@@ -141,7 +142,6 @@ export class DashboardOverviewComponent implements OnInit {
 
   ngOnInit(): void {
     this.gastoService.listar().subscribe({ next: (g) => this.gastosSinFiltrar.set(g) });
-    this.gastoService.resumen().subscribe({ next: (r) => this.resumenGastos.set(r) });
     this.ingresoService.listar().subscribe({ next: (i) => this.ingresosSinFiltrar.set(i) });
     this.ahorroService.listar().subscribe({
       next: (a) => {
@@ -170,15 +170,15 @@ export class DashboardOverviewComponent implements OnInit {
   }
 
   donutLargo(total: number): number {
-    const circunferencia = 251;
+    const circunferencia = 2 * Math.PI * 40;
     const pct = this.totalResumenCategorias() > 0 ? (Number(total) / this.totalResumenCategorias()) * 100 : 0;
     return (pct / 100) * circunferencia;
   }
 
   donutOffset(index: number): number {
-    const circunferencia = 251;
+    const circunferencia = 2 * Math.PI * 40;
     const acumulado = this.resumenGastos().slice(0, index).reduce((s, r) => s + Number(r.total), 0);
     const pct = this.totalResumenCategorias() > 0 ? (acumulado / this.totalResumenCategorias()) * 100 : 0;
-    return circunferencia - (pct / 100) * circunferencia;
+    return -(pct / 100) * circunferencia;
   }
 }

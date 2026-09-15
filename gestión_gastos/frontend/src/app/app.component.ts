@@ -1,3 +1,4 @@
+import { DialogComponent } from './shared/dialog.component';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SessionExpiredModalComponent } from './shared/session-expired-modal/session-expired-modal.component';
@@ -5,7 +6,7 @@ import { SessionExpiredModalComponent } from './shared/session-expired-modal/ses
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SessionExpiredModalComponent],
+  imports: [DialogComponent, RouterOutlet, SessionExpiredModalComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })

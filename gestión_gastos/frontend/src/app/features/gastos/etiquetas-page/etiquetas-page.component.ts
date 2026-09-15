@@ -1,3 +1,7 @@
+import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
+import { enRango, hoyLocal } from '../../../shared/registro.utils';
+import { inject } from '@angular/core';
+import { DialogService } from '../../../shared/dialog.service';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import {
@@ -30,12 +34,20 @@ export const COLORES_ETIQUETA = ['#E8672A', '#F2A472', '#2B2A28', '#F5EEDD'];
 @Component({
   selector: 'app-etiquetas-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './etiquetas-page.component.html',
   styleUrl: './etiquetas-page.component.scss',
 })
 export class EtiquetasPageComponent implements OnInit {
+  readonly dialog = inject(DialogService);
   readonly etiquetas = signal<Etiqueta[]>([]);
+  readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
+  onRango(r: RangoFechas): void { this.rango.set(r); }
+  seleccionarDia(dia: number | null): void {
+    if(!dia) return;
+    const f = hoyLocal(new Date(this.mesCalendario().getFullYear(),this.mesCalendario().getMonth(),dia));
+    this.onRango({desde:f,hasta:f,etiqueta:f});
+  }
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -53,7 +65,7 @@ export class EtiquetasPageComponent implements OnInit {
   readonly diasSemana = DIAS_SEMANA;
 
   readonly principales = computed(() =>
-    this.etiquetas().filter((e) => !e.etiquetaPadreId)
+    this.etiquetas().filter((e) => !e.etiquetaPadreId && (enRango(e.createdAt,this.rango()) || this.etiquetas().some(sub => sub.etiquetaPadreId === e.id && enRango(sub.createdAt,this.rango()))))
   );
 
   readonly seleccionada = computed(
@@ -204,8 +216,8 @@ export class EtiquetasPageComponent implements OnInit {
       });
   }
 
-  editar(sub: Etiqueta): void {
-    const nuevoNombre = prompt('Nuevo nombre:', sub.nombre);
+  async editar(sub: Etiqueta): Promise<void> {
+    const nuevoNombre = await this.dialog.prompt('Nuevo nombre:', sub.nombre);
     if (!nuevoNombre || nuevoNombre.trim() === sub.nombre) return;
 
     this.etiquetaService
@@ -216,17 +228,17 @@ export class EtiquetasPageComponent implements OnInit {
             lista.map((e) => (e.id === actualizada.id ? actualizada : e))
           );
         },
-        error: () => this.error.set('No se pudo actualizar la etiqueta.'),
+        error: (err) => this.error.set(err?.error?.error ?? 'No se pudo actualizar la etiqueta.'),
       });
   }
 
-  eliminar(sub: Etiqueta): void {
-    const confirmado = confirm(`¿Eliminar la etiqueta "${sub.nombre}"?`);
+  async eliminar(sub: Etiqueta): Promise<void> {
+    const confirmado = await this.dialog.confirm(`¿Eliminar la etiqueta "${sub.nombre}"?`);
     if (!confirmado) return;
 
     this.etiquetaService.eliminar(sub.id).subscribe({
       next: () => this.etiquetas.update((lista) => lista.filter((e) => e.id !== sub.id)),
-      error: () => this.error.set('No se pudo eliminar la etiqueta.'),
+      error: (err) => this.error.set(err?.error?.error ?? 'No se pudo eliminar la etiqueta.'),
     });
   }
 

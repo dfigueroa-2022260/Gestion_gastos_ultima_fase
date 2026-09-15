@@ -1,5 +1,6 @@
+import { hoyLocal } from '../registro.utils';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 export interface RangoFechas {
@@ -8,7 +9,7 @@ export interface RangoFechas {
   etiqueta: string;
 }
 
-const hoyISO = (d: Date) => d.toISOString().slice(0, 10);
+const hoyISO = (d: Date) => hoyLocal(d);
 
 /**
  * Botones "Filter" + "Calendario" reutilizados en todas las paginas.
@@ -23,9 +24,14 @@ const hoyISO = (d: Date) => d.toISOString().slice(0, 10);
   styleUrl: './top-filters.component.scss',
 })
 export class TopFiltersComponent {
+  @Input() set rango(value: RangoFechas) {
+    this.desde.set(value.desde ?? ''); this.hasta.set(value.hasta ?? ''); this.etiquetaActual.set(value.etiqueta);
+  }
+  @Input() soloCalendario = false;
   @Output() rangoChange = new EventEmitter<RangoFechas>();
 
   readonly abierto = signal(false);
+  readonly error = signal('');
   readonly etiquetaActual = signal('Todo');
   readonly desde = signal('');
   readonly hasta = signal('');
@@ -66,6 +72,8 @@ export class TopFiltersComponent {
   }
 
   aplicarPersonalizado(): void {
+    this.error.set('');
+    if(this.desde() && this.hasta() && this.desde() > this.hasta()) { this.error.set('La fecha inicial no puede ser posterior a la final.'); return; }
     if (!this.desde() && !this.hasta()) {
       this.aplicarPreset('todo');
       return;

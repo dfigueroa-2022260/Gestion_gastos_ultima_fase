@@ -1,6 +1,7 @@
 :host {
   --d-bg: #f3ead9;
   --d-card: #ffffff;
+  --d-surface: #fbf7ee;
   --d-dark: #2b2a28;
   --d-dark-soft: #3a3936;
   --d-ink: #201f1d;
@@ -232,7 +233,7 @@
   top: 44px;
   right: 0;
   width: 320px;
-  background: #fff;
+  background: var(--d-card, #fff);
   border: 1px solid var(--d-border);
   border-radius: 12px;
   box-shadow: 0 16px 32px rgba(43, 42, 40, 0.18);
@@ -274,7 +275,7 @@
   font-family: 'Inter', sans-serif;
 
   &:hover {
-    background: #fbf7ee;
+    background: var(--d-surface, #fbf7ee);
   }
 
   .tipo {
@@ -336,7 +337,7 @@
   top: 52px;
   right: 0;
   width: 260px;
-  background: #fff;
+  background: var(--d-card, #fff);
   border: 1px solid var(--d-border);
   border-radius: 12px;
   box-shadow: 0 16px 32px rgba(43, 42, 40, 0.18);
@@ -396,7 +397,7 @@
   padding: 10px;
   border-radius: 8px;
   border: 1px solid var(--d-border);
-  background: #fff;
+  background: var(--d-card, #fff);
   color: #c43d3d;
   font-family: 'Inter', sans-serif;
   font-size: 13px;

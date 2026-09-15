@@ -1,3 +1,4 @@
+app-gastos-home {
 // Estilos de CONTENIDO compartidos entre las paginas que viven dentro del
 // shell del dashboard (sidebar+topbar en gastos-home.component). Las
 // variables de color (--d-accent, --d-card, etc.) las define el :host del
@@ -56,7 +57,7 @@
 }
 
 .btn-calendar {
-  background: #fff;
+  background: var(--d-card, #fff);
   color: var(--d-ink);
   border: 1px solid var(--d-border);
 }
@@ -152,6 +153,7 @@
 }
 
 .chart-card {
+  min-width: 0;
   background: var(--d-card);
   border: 1px solid var(--d-border);
   border-radius: 14px;
@@ -164,9 +166,13 @@
   }
 }
 
+.chart-scroll { overflow-x: auto; }
+
 .line-chart {
+  display: block;
   width: 100%;
-  height: 220px;
+  height: auto;
+  aspect-ratio: 460 / 220;
 }
 
 .grid-line {
@@ -177,7 +183,8 @@
 .line-dark {
   fill: none;
   stroke: var(--d-dark);
-  stroke-width: 2.5;
+  stroke-width: 1.8;
+  vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -185,7 +192,8 @@
 .line-accent {
   fill: none;
   stroke: var(--d-accent);
-  stroke-width: 2.5;
+  stroke-width: 1.8;
+  vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -276,7 +284,7 @@
     font-family: 'Inter', sans-serif;
     font-size: 14px;
     color: var(--d-ink);
-    background: #fbf7ee;
+    background: var(--d-surface, #fbf7ee);
     outline: none;
 
     &:focus {
@@ -340,7 +348,7 @@
   padding: 12px 14px;
   border: 1px solid var(--d-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--d-card, #fff);
   font-size: 13.5px;
 }
 
@@ -368,7 +376,7 @@
   height: 30px;
   border-radius: 50%;
   border: 1px solid var(--d-border);
-  background: #fff;
+  background: var(--d-card, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,4 +415,6 @@
   .form-grid {
     grid-template-columns: 1fr;
   }
+}
+
 }

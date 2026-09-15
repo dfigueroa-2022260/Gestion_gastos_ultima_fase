@@ -33,6 +33,7 @@ model Usuario {
   ahorros        Ahorro[]
   etiquetas      Etiqueta[]
   metas          Meta[]
+  planes         PlanFinanciero[]
 
   @@map("usuarios")
 }
@@ -139,4 +140,16 @@ model Ahorro {
   updatedAt   DateTime   @updatedAt
 
   @@map("ahorros")
+}
+
+model PlanFinanciero {
+  id String @id @default(uuid())
+  tipo String
+  nombre String
+  monto Decimal @db.Decimal(10, 2)
+  fecha DateTime?
+  usuarioId String
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@map("planes_financieros")
 }
