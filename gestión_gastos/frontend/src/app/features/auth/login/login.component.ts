@@ -1,3 +1,4 @@
+import { GoogleLoginComponent } from '../google/google-login.component';
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import {
@@ -18,7 +19,7 @@ interface LoginForm {
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [GoogleLoginComponent, CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })

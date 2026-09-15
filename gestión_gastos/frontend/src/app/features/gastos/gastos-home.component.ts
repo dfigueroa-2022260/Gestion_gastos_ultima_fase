@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { PreferencesService } from '../../core/services/preferences.service';
 import { NotificationsService } from '../../core/services/notifications.service';
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
@@ -142,7 +142,20 @@ export class GastosHomeComponent implements OnInit {
     this.activoManual.set(label);
   }
 
+  @HostListener('document:click', ['$event'])
+  cerrarAlSalir(event: MouseEvent): void {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest('.search-wrap')) this.busquedaAbierta.set(false);
+    if (!target.closest('.perfil-wrap, [data-perfil-trigger]')) this.perfilPanel.cerrar();
+  }
+  @HostListener('document:keydown.escape')
+  cerrarPaneles(): void {
+    this.busquedaAbierta.set(false);
+    this.perfilPanel.cerrar();
+  }
   toggleBusqueda(): void {
+    this.perfilPanel.cerrar();
     this.busquedaAbierta.update((v) => !v);
     if (!this.busquedaAbierta()) this.busquedaTexto.set('');
   }

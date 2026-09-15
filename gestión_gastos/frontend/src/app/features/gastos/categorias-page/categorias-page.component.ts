@@ -1,5 +1,7 @@
+import { ColorPickerComponent } from '../../../shared/color-picker/color-picker.component';
+import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
-import { enRango, resumir } from '../../../shared/registro.utils';
+import { coincideMovimiento, enRango, resumir } from '../../../shared/registro.utils';
 import { Gasto } from '../gastos-page/gasto.models';
 import { inject } from '@angular/core';
 import { DialogService } from '../../../shared/dialog.service';
@@ -39,20 +41,23 @@ export const ICONOS_CATEGORIA = [
 @Component({
   selector: 'app-categorias-page',
   standalone: true,
-  imports: [TopFiltersComponent, CommonModule, ReactiveFormsModule],
+  imports: [ColorPickerComponent, BarChartComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './categorias-page.component.html',
   styleUrl: './categorias-page.component.scss',
 })
 export class CategoriasPageComponent implements OnInit {
+  readonly datosBarras = computed(() => this.resumenGastos().map(p => ({label: p.nombre, valores: [p.total]})));
   readonly dialog = inject(DialogService);
   readonly categorias = signal<Categoria[]>([]);
   readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
   readonly movimientos = signal<Gasto[]>([]);
-  readonly resumenGastos = computed(() => resumir(this.movimientos().filter(g => enRango(g.fecha,this.rango()))));
+  readonly resumenGastos = computed(() => resumir(this.movimientos().filter(g => coincideMovimiento(g, this.rango()))));
   onRango(r: RangoFechas): void { this.rango.set(r); }
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
+  readonly colorSeleccionado = signal('#e2672e');
+  readonly colores = ['#e2672e', '#7a744a', '#377d86', '#8b609e', '#c65563', '#3777b3'];
   readonly iconos = ICONOS_CATEGORIA;
   readonly iconoSeleccionado = signal('tag');
 
@@ -127,6 +132,15 @@ export class CategoriasPageComponent implements OnInit {
     this.seleccionar(id);
   }
 
+  cambiarColor(categoria: Categoria, color: string): void {
+    this.categoriaService.actualizar(categoria.id, { nombre: categoria.nombre, color, categoriaPadreId: categoria.categoriaPadreId }).subscribe({
+      next: actualizada => {
+        this.categorias.update(lista => lista.map(c => c.id === actualizada.id ? actualizada : c));
+        this.movimientos.update(lista => lista.map(g => g.categoriaId === actualizada.id ? { ...g, categoria: { ...g.categoria, color } } : g));
+      },
+      error: () => this.error.set('No se pudo guardar el color.')
+    });
+  }
   seleccionarIcono(key: string): void {
     this.iconoSeleccionado.set(key);
   }
@@ -143,7 +157,7 @@ export class CategoriasPageComponent implements OnInit {
     const { nombre } = this.formNueva.getRawValue();
 
     this.categoriaService
-      .crear({ nombre, icono: this.iconoSeleccionado(), categoriaPadreId: null })
+      .crear({ nombre, color: this.colorSeleccionado(), icono: this.iconoSeleccionado(), categoriaPadreId: null })
       .subscribe({
         next: (categoria) => {
           this.guardando.set(false);
@@ -174,7 +188,7 @@ export class CategoriasPageComponent implements OnInit {
     const { nombre } = this.formSub.getRawValue();
 
     this.categoriaService
-      .crear({ nombre, icono: padre.icono, categoriaPadreId: padre.id })
+      .crear({ nombre, color: padre.color, icono: padre.icono, categoriaPadreId: padre.id })
       .subscribe({
         next: (categoria) => {
           this.categorias.update((lista) => [...lista, categoria]);

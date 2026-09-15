@@ -50,6 +50,7 @@
         <span>{{ cargando() ? 'Entrando...' : 'Entrar' }}</span>
       </button>
     </form>
+    <app-google-login></app-google-login>
 
     <div class="footer-link">
       ¿No tienes cuenta? <a routerLink="/registro">Registrate</a>
@@ -57,10 +58,18 @@
   </div>
 
   <div class="panel-right">
+    <div class="dashboard-backdrop" aria-hidden="true">
+      <div class="preview-card" *ngFor="let card of [0,1,2,3]">
+        <div class="preview-heading"></div><div class="preview-subtitle"></div>
+        <div class="preview-bars" *ngIf="card !== 3"><span *ngFor="let height of [24,48,35,64,52,82]" [style.height.%]="height"><i></i></span></div>
+        <svg *ngIf="card === 3" viewBox="0 0 200 120"><path d="M5 102 36 76 62 84 94 46 124 68 158 18 194 48" fill="none" stroke="#df843e" stroke-width="7" /></svg>
+        <div class="preview-ticks"><i *ngFor="let tick of [0,1,2,3,4,5]"></i></div>
+      </div>
+    </div>
     <div class="panel-right-content">
       <div class="panel-right-mark">Cash Track</div>
       <p class="panel-right-copy">
-        Controla tus gastos dia a dia, con orden y claridad.
+        Controla tus gastos d&#237;a a d&#237;a, con orden y claridad.
       </p>
     </div>
   </div>

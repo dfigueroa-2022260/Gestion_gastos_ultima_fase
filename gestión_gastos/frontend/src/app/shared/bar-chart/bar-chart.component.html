@@ -1,0 +1,18 @@
+<ng-container *ngIf="grupos().length; else vacio">
+<div class="bar-scroll">
+ <svg [attr.viewBox]="'0 0 ' + ancho() + ' 245'" [style.min-width.px]="ancho()" role="img" [attr.aria-label]="titulo">
+  <text x="12" y="18" class="unit">Q</text>
+  <ng-container *ngFor="let valor of escala().marcas">
+   <line x1="90" [attr.x2]="ancho() - 15" [attr.y1]="y(valor)" [attr.y2]="y(valor)" class="reference-line" />
+   <text x="79" [attr.y]="y(valor) + 4" class="reference-number">{{valor | number:'1.0-2'}}</text>
+  </ng-container>
+  <line x1="90" [attr.x2]="ancho() - 15" [attr.y1]="y(0)" [attr.y2]="y(0)" class="zero-line" />
+  <ng-container *ngFor="let grupo of grupos(); let i = index">
+   <rect *ngFor="let valor of grupo.valores; let j = index" [attr.x]="x(i) + (j - grupo.valores.length / 2) * anchoBarra(grupo.valores.length)" [attr.y]="techo(valor)" [attr.width]="anchoBarra(grupo.valores.length) - 3" [attr.height]="altura(valor)" rx="4" [attr.fill]="color(j)" tabindex="0"><title>{{grupo.label}} &#183; {{series[j]}}: Q{{valor | number:'1.2-2'}}</title></rect>
+   <text [attr.x]="x(i)" y="226" class="group-label"><title>{{grupo.label}}</title>{{grupo.label.length > 12 ? (grupo.label | slice:0:11) + '...' : grupo.label}}</text>
+  </ng-container>
+ </svg>
+</div>
+<div class="bar-legend"><span *ngFor="let serie of series; let i = index"><i [style.background]="color(i)"></i>{{serie}}</span></div>
+</ng-container>
+<ng-template #vacio><p class="empty-hint">No hay datos para los filtros seleccionados.</p></ng-template>

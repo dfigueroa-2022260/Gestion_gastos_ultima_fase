@@ -1,15 +1,24 @@
 <div class="top-filters-wrap">
-  <button *ngIf="!soloCalendario" class="btn-filter" type="button" (click)="toggle()">
+  <button *ngIf="!soloCalendario && movimientos" class="btn-filter" type="button" (click)="abrir('filtros')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M7 12h10M10 19h4" stroke-linecap="round"/></svg>
-    {{ etiquetaActual() }}
+    Filtros {{ texto() || minimo() !== null || maximo() !== null ? '(activos)' : '' }}
   </button>
-  <button class="btn-calendar" type="button" (click)="toggle()">
-    Calendario
+  <button class="btn-calendar" type="button" (click)="abrir('calendario')">
+    {{ etiquetaActual() === 'Todo' ? 'Calendario' : etiquetaActual() }}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
 
   <div class="filtros-panel" *ngIf="abierto()">
-    <p class="panel-label">Rango rapido</p>
+    <ng-container *ngIf="modo() === 'filtros'; else calendario">
+      <label class="filter-field">Descripción o categoría<input type="search" [ngModel]="texto()" (ngModelChange)="texto.set($event)" placeholder="Ej. comida, transporte..." /></label>
+      <label class="filter-field">Importe mínimo (Q)<input type="number" min="0" [ngModel]="minimo()" (ngModelChange)="minimo.set($event)" /></label>
+      <label class="filter-field">Importe máximo (Q)<input type="number" min="0" [ngModel]="maximo()" (ngModelChange)="maximo.set($event)" /></label>
+      <p role="alert" *ngIf="error()">{{error()}}</p>
+      <button type="button" class="btn-aplicar" (click)="aplicarFiltros()">Aplicar filtros</button>
+      <button type="button" class="btn-calendar" (click)="limpiarFiltros()">Limpiar filtros</button>
+    </ng-container>
+    <ng-template #calendario>
+    <p class="panel-label">Rango rápido</p>
     <div class="presets">
       <button type="button" (click)="aplicarPreset('todo')">Todo</button>
       <button type="button" (click)="aplicarPreset('mes')">Este mes</button>
@@ -24,5 +33,6 @@
       <input type="date" aria-label="Hasta" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
     </div>
     <button type="button" class="btn-aplicar" (click)="aplicarPersonalizado()">Aplicar</button>
+    </ng-template>
   </div>
 </div>

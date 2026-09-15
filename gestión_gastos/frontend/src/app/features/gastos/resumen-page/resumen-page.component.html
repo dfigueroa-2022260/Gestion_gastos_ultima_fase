@@ -1,6 +1,6 @@
 <div class="content-header">
   <h1>CASH TRACK <span>Resumen</span></h1>
-  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
+  <app-top-filters [movimientos]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
 <div class="form-card" *ngIf="tipoPlan()">
@@ -66,21 +66,8 @@
 <div class="charts-grid">
   <div class="chart-card">
     <h3>Gastos e ingresos del período</h3>
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="xMidYMid meet" *ngIf="datosPorMes().length; else sinDatos">
-      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
-      <ng-container *ngFor="let p of datosPorMes(); let i = index">
-        <rect [attr.x]="30 + i * 70 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="8" fill="var(--d-dark)" />
-        <rect [attr.x]="30 + i * 70 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="8" fill="var(--d-accent)" />
-        <text [attr.x]="30 + i * 70 + 24" y="214" class="axis-label">{{ p.label }}</text>
-      </ng-container>
-    </svg>
-    <ng-template #sinDatos>
-      <p class="empty-hint">Todavia no hay datos suficientes para graficar.</p>
-    </ng-template>
-    <div class="mini-legend">
-      <span><i style="background: var(--d-dark)"></i> Gastos</span>
-      <span><i style="background: var(--d-accent)"></i> Ingresos</span>
-    </div>
+    <app-bar-chart [datos]="datosBarras()" [series]="['Ingresos','Gastos']" titulo="Ingresos y Gastos en quetzales"></app-bar-chart>
+
   </div>
 
   <div class="chart-card calendario-card">

@@ -99,18 +99,8 @@
 
 <div class="chart-card tendencia-card">
   <div class="tendencia-header">
-    <h3>Tendencias</h3>
-    <span>Ahorro neto acumulado del período</span>
+    <h3>Avance de tus metas</h3>
+    <span>Monto acumulado y objetivo por meta</span>
   </div>
-  <svg class="line-chart" viewBox="0 0 460 200" preserveAspectRatio="xMidYMid meet" *ngIf="tendencia().length > 0; else sinTendencia">
-    <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="180 - f * 140" x2="450" [attr.y2]="180 - f * 140" class="grid-line" />
-    <polyline [attr.points]="puntosLinea()" class="line-accent" />
-    <ng-container *ngFor="let p of tendencia(); let i = index">
-      <circle [attr.cx]="30 + i * 55" [attr.cy]="yPunto(p.total)" r="4" fill="var(--d-accent)"><title>Q{{p.total | number: '1.2-2'}}</title></circle>
-      <text [attr.x]="30 + i * 55" y="196" class="axis-label">{{ p.label }}</text>
-    </ng-container>
-  </svg>
-  <ng-template #sinTendencia>
-    <p class="empty-hint">Registrá ahorros para el período seleccionado para ver la tendencia.</p>
-  </ng-template>
+  <app-bar-chart [datos]="datosBarras()" [series]="['Acumulado','Objetivo']" titulo="Acumulado y Objetivo en quetzales"></app-bar-chart>
 </div>

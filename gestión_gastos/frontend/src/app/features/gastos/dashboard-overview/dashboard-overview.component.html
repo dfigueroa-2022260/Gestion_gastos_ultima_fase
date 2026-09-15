@@ -1,6 +1,6 @@
 <div class="content-header">
   <h1>CASH TRACK <span>Principal</span></h1>
-  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
+  <app-top-filters [movimientos]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
 <button class="tip-banner" type="button" (click)="toggleConsejo()">
@@ -23,7 +23,7 @@
     <div class="stat-sub">{{ rango().etiqueta }}</div>
   </div>
 
-  <button class="stat-card as-button" type="button" (click)="perfilPanel.toggle()">
+  <button class="stat-card as-button" data-perfil-trigger type="button" (click)="perfilPanel.toggle()">
     <div class="stat-top">
       <span>Tu perfil</span>
       <span class="stat-icon dark">
@@ -57,43 +57,28 @@
   </div>
 </div>
 
-<div class="charts-grid">
-  <div class="chart-card">
-    <h3>Gastos e ingresos por mes</h3>
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="xMidYMid meet" *ngIf="datosPorMes().length; else sinDatosMes">
-      <line *ngFor="let f of [0, 40, 80, 120, 160]" x1="30" [attr.y1]="190 - f" x2="450" [attr.y2]="190 - f" class="grid-line" />
-      <ng-container *ngFor="let p of datosPorMes(); let i = index">
-        <rect [attr.x]="30 + i * 60 + 6" [attr.y]="yBarra(p.gasto)" width="16" [attr.height]="alturaBarra(p.gasto)" rx="8" fill="var(--d-dark)" />
-        <rect [attr.x]="30 + i * 60 + 26" [attr.y]="yBarra(p.ingreso)" width="16" [attr.height]="alturaBarra(p.ingreso)" rx="8" fill="var(--d-accent)" />
-        <text [attr.x]="30 + i * 60 + 24" y="208" class="axis-label">{{ p.label }}</text>
-      </ng-container>
-    </svg>
-    <ng-template #sinDatosMes>
-      <p class="empty-hint">Todavia no hay movimientos para graficar.</p>
-    </ng-template>
-  </div>
-
-  <div class="chart-card">
-    <h3>Gastos por categoria</h3>
-    <div class="donut-wrap" *ngIf="resumenGastos().length; else sinCategorias">
-      <div class="donut-info">
-        <span>Total del periodo</span>
-        <strong>Q{{ totalResumenCategorias() | number: '1.0-2' }}</strong>
-      </div>
-      <svg class="donut-chart" viewBox="0 0 100 100">
-        <text *ngIf="resumenGastos().length === 1" x="50" y="53" text-anchor="middle" font-size="10" fill="currentColor">100%</text>
-        <circle
-          *ngFor="let seg of resumenGastos(); let i = index"
-          cx="50" cy="50" r="40" fill="none"
-          [attr.stroke]="seg.color" stroke-width="14"
-          [attr.stroke-dasharray]="donutLargo(seg.total) + ' ' + (2 * 3.141592653589793 * 40)"
-          [attr.stroke-dashoffset]="donutOffset(i)"
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-    </div>
-    <ng-template #sinCategorias>
-      <p class="empty-hint">Todavia no hay gastos registrados.</p>
-    </ng-template>
-  </div>
+<div class="overview-charts">
+<section class="overview-chart">
+ <h3>Ingresos y gastos</h3>
+ <div class="overview-chart-surface">
+  <ng-container *ngIf="seriesMovimientos().length; else sinGastos">
+   <svg class="expense-chart" viewBox="0 0 460 220" role="img" aria-label="Ingresos y gastos mensuales en quetzales">
+    <ng-container *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]">
+     <line x1="55" x2="427" [attr.y1]="yPunto(maxValorMes() * f)" [attr.y2]="yPunto(maxValorMes() * f)" class="expense-grid" />
+     <text x="46" [attr.y]="yPunto(maxValorMes() * f) + 3" class="amount-axis">{{maxValorMes() * f | number:'1.0-2'}}</text>
+    </ng-container>
+    <text x="12" y="16" class="amount-axis">Q</text>
+    <ng-container *ngFor="let serie of seriesMovimientos()">
+     <polyline [attr.points]="puntosLinea(serie.valores)" fill="none" [attr.stroke]="serie.color" stroke-width="1.8" stroke-linejoin="round" />
+     <circle *ngFor="let valor of serie.valores; let i = index" [attr.cx]="xPunto(i)" [attr.cy]="yPunto(valor)" [attr.r]="serie.nombre === 'Gastos' ? 4 : 3" [attr.fill]="serie.color" class="expense-point" tabindex="0"><title>{{serie.nombre}} &#183; {{mesesGrafica()[i].completo}}: Q{{valor | number:'1.2-2'}}</title></circle>
+    </ng-container>
+    <text *ngFor="let mes of mesesGrafica(); let i = index" [attr.x]="xPunto(i)" y="202" class="month-axis">{{mes.label}}</text>
+   </svg>
+   <div class="expense-legend"><span *ngFor="let serie of seriesMovimientos()"><i [style.background]="serie.color"></i>{{serie.nombre}}</span></div>
+   <p class="chart-period">{{mesesGrafica()[0].completo}} &mdash; {{mesesGrafica()[6].completo}}</p>
+  </ng-container>
+  <ng-template #sinGastos><p class="empty-hint">No hay ingresos ni gastos para los filtros seleccionados.</p></ng-template>
+ </div>
+</section>
+<app-category-donut titulo="Resumen de ingresos" [datos]="resumenIngresos()" [etiqueta]="rango().etiqueta"></app-category-donut>
 </div>

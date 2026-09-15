@@ -1,4 +1,5 @@
-import { resumir } from '../../../shared/registro.utils';
+import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
+import { coincideMovimiento, resumir } from '../../../shared/registro.utils';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { PerfilPanelService } from '../../../core/services/perfil-panel.service';
@@ -23,22 +24,16 @@ const NOMBRES_MES = [
   'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
 ];
 
-const enRango = (fechaStr: string, desde: string | null, hasta: string | null): boolean => {
-  const f = fechaStr.slice(0, 10);
-  if (desde && f < desde) return false;
-  if (hasta && f > hasta) return false;
-  return true;
-};
 
 /**
  * Pagina "Home": conectada a los datos reales de gastos, ingresos, ahorro
- * y metas. Filter/Calendario filtran por fecha; "Consejos de Finanzas"
+ * y metas. Los filtros permiten buscar movimientos por texto, importe y fecha; "Consejos de Finanzas"
  * genera una recomendacion corta a partir de esos mismos datos.
  */
 @Component({
   selector: 'app-dashboard-overview',
   standalone: true,
-  imports: [CommonModule, TopFiltersComponent],
+  imports: [CategoryDonutComponent, CommonModule, TopFiltersComponent],
   templateUrl: './dashboard-overview.component.html',
   styleUrl: './dashboard-overview.component.scss',
 })
@@ -54,13 +49,13 @@ export class DashboardOverviewComponent implements OnInit {
   readonly consejoAbierto = signal(false);
 
   readonly gastos = computed(() =>
-    this.gastosSinFiltrar().filter((g) => enRango(g.fecha, this.rango().desde, this.rango().hasta))
+    this.gastosSinFiltrar().filter((g) => coincideMovimiento(g, this.rango()))
   );
   readonly ingresos = computed(() =>
-    this.ingresosSinFiltrar().filter((i) => enRango(i.fecha, this.rango().desde, this.rango().hasta))
+    this.ingresosSinFiltrar().filter((i) => coincideMovimiento(i, this.rango()))
   );
   readonly ahorros = computed(() =>
-    this.ahorrosSinFiltrar().filter((a) => enRango(a.fecha, this.rango().desde, this.rango().hasta))
+    this.ahorrosSinFiltrar().filter((a) => coincideMovimiento(a, this.rango()))
   );
 
   readonly totalGastos = computed(() => this.gastos().reduce((s, g) => s + Number(g.monto), 0));
@@ -85,35 +80,35 @@ export class DashboardOverviewComponent implements OnInit {
     return { cantidad: activas.length, promedio };
   });
 
-  readonly datosPorMes = computed<PuntoMes[]>(() => {
-    const mapa = new Map<string, { gasto: number; ingreso: number }>();
-    const acumular = (fechaStr: string, campo: 'gasto' | 'ingreso', monto: number) => {
-      const f = new Date(fechaStr.slice(0, 10) + 'T12:00:00');
-      const clave = `${f.getFullYear()}-${String(f.getMonth()).padStart(2, '0')}`;
-      const actual = mapa.get(clave) ?? { gasto: 0, ingreso: 0 };
-      actual[campo] += monto;
-      mapa.set(clave, actual);
-    };
-    this.gastos().forEach((g) => acumular(g.fecha, 'gasto', Number(g.monto)));
-    this.ingresos().forEach((i) => acumular(i.fecha, 'ingreso', Number(i.monto)));
-
-    return Array.from(mapa.entries())
-      .sort((a, b) => (a[0] > b[0] ? 1 : -1))
-      .slice(-7)
-      .map(([clave, val]) => {
-        const mes = Number(clave.split('-')[1]);
-        return { label: NOMBRES_MES[mes], ...val };
-      });
+  readonly mesesGrafica = computed(() => {
+    const fechas = [...this.gastos(), ...this.ingresos()].map(g => g.fecha.slice(0, 7)).sort();
+    if (!fechas.length) return [];
+    const fin = new Date(fechas[fechas.length - 1] + '-01T12:00:00');
+    return Array.from({ length: 7 }, (_, i) => {
+      const fecha = new Date(fin.getFullYear(), fin.getMonth() - 6 + i, 1);
+      return { clave: fecha.getFullYear() + '-' + String(fecha.getMonth() + 1).padStart(2, '0'), label: fecha.toLocaleDateString('es', { month: 'short' }), completo: fecha.toLocaleDateString('es', { month: 'long', year: 'numeric' }) };
+    });
   });
-
+  readonly seriesMovimientos = computed(() => {
+    const meses = this.mesesGrafica();
+    if (!meses.length) return [];
+    return [
+      { nombre: 'Gastos', color: '#201f1d', registros: this.gastos() },
+      { nombre: 'Ingresos', color: '#ff8b4c', registros: this.ingresos() }
+    ].map(serie => ({ nombre: serie.nombre, color: serie.color,
+      valores: meses.map(m => serie.registros.filter(r => r.fecha.startsWith(m.clave)).reduce((total, r) => total + Number(r.monto), 0))
+    }));
+  });
   readonly maxValorMes = computed(() => {
-    const valores = this.datosPorMes().flatMap((p) => [p.gasto, p.ingreso]);
-    return Math.max(...valores, 1);
+    const max = Math.max(1, ...this.seriesMovimientos().flatMap(s => s.valores));
+    const paso = Math.pow(10, Math.floor(Math.log10(max)));
+    return Math.ceil(max / paso) * paso;
   });
-
-  readonly totalResumenCategorias = computed(() =>
-    this.resumenGastos().reduce((s, r) => s + Number(r.total), 0)
-  );
+  readonly resumenIngresos = computed(() => resumir(this.ingresos()).sort((a, b) => b.total - a.total));
+  readonly ingresoSeleccionado = signal<string | null>(null);
+  readonly ingresoDetalle = computed(() => this.resumenIngresos().find(c => c.categoriaId === this.ingresoSeleccionado()) ?? null);
+  seleccionarIngreso(id: string): void { this.ingresoSeleccionado.update(actual => actual === id ? null : id); }
+  colorIngreso(index: number): string { return ['#ff8b4c', '#d96a32', '#f2dfcc', '#816b5b', '#b8967d', '#caaa8b'][index % 6]; }
 
   readonly consejo = computed(() => {
     const pct = this.gastosDelMesPct();
@@ -161,24 +156,9 @@ export class DashboardOverviewComponent implements OnInit {
     this.consejoAbierto.update((v) => !v);
   }
 
-  alturaBarra(valor: number): number {
-    return (valor / this.maxValorMes()) * 160;
-  }
-
-  yBarra(valor: number): number {
-    return 190 - this.alturaBarra(valor);
-  }
-
-  donutLargo(total: number): number {
-    const circunferencia = 2 * Math.PI * 40;
-    const pct = this.totalResumenCategorias() > 0 ? (Number(total) / this.totalResumenCategorias()) * 100 : 0;
-    return (pct / 100) * circunferencia;
-  }
-
-  donutOffset(index: number): number {
-    const circunferencia = 2 * Math.PI * 40;
-    const acumulado = this.resumenGastos().slice(0, index).reduce((s, r) => s + Number(r.total), 0);
-    const pct = this.totalResumenCategorias() > 0 ? (acumulado / this.totalResumenCategorias()) * 100 : 0;
-    return -(pct / 100) * circunferencia;
-  }
+  xPunto(index: number): number { return 55 + index * 62; }
+  yPunto(valor: number): number { return 185 - valor / this.maxValorMes() * 155; }
+  puntosLinea(valores: number[]): string { return valores.map((valor, i) => this.xPunto(i) + ',' + this.yPunto(valor)).join(' '); }
+  donutLargo(total: number): number { return this.totalIngresos() > 0 ? total / this.totalIngresos() * 2 * Math.PI * 48 : 0; }
+  donutOffset(index: number): number { return -this.donutLargo(this.resumenIngresos().slice(0, index).reduce((total, c) => total + c.total, 0)); }
 }

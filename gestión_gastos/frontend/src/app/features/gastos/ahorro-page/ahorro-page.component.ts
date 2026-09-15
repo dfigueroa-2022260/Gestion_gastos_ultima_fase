@@ -1,5 +1,7 @@
+import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
+import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
-import { enRango, resumir } from '../../../shared/registro.utils';
+import { coincideMovimiento, enRango, resumir } from '../../../shared/registro.utils';
 import { inject } from '@angular/core';
 import { DialogService } from '../../../shared/dialog.service';
 import { hoyLocal, fechaPasada, descripcionObligatoria } from '../../../shared/registro.utils';
@@ -42,16 +44,17 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-ahorro-page',
   standalone: true,
-  imports: [TopFiltersComponent, CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './ahorro-page.component.html',
   styleUrl: './ahorro-page.component.scss',
 })
 export class AhorroPageComponent implements OnInit {
+  readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.total]})));
   readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
   onRango(r: RangoFechas): void { this.rango.set(r); }
   readonly dialog = inject(DialogService);
   private readonly ahorrosTodos = signal<Ahorro[]>([]);
-  readonly ahorros = computed(() => this.ahorrosTodos().filter(r => enRango(r.fecha, this.rango())));
+  readonly ahorros = computed(() => this.ahorrosTodos().filter(r => coincideMovimiento(r, this.rango())));
   readonly categorias = signal<Categoria[]>([]);
   readonly resumenCategorias = computed(() => resumir(this.ahorros()));
 
@@ -99,10 +102,9 @@ export class AhorroPageComponent implements OnInit {
 
     return Array.from(mapa.entries())
       .sort((a, b) => (a[0] > b[0] ? 1 : -1))
-      .slice(-7)
       .map(([clave, total]) => {
         const mes = Number(clave.split('-')[1]);
-        return { label: NOMBRES_MES[mes].slice(0, 3), total };
+        return { label: NOMBRES_MES[mes].slice(0, 3) + " " + clave.slice(2, 4), total };
       });
   });
 

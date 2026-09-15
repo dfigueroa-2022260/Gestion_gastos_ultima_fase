@@ -1,6 +1,6 @@
 <div class="content-header">
   <h1>CASH TRACK <span>Reportes</span></h1>
-  <div class="report-actions"><button class="btn-filter" type="button" [attr.aria-expanded]="filtrosAbiertos()" (click)="filtrosAbiertos.set(!filtrosAbiertos())">Filtros{{filtrosActivos() ? ' activos' : ''}}</button><app-top-filters [soloCalendario]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters></div>
+  <div class="report-actions"><button class="btn-filter" type="button" [attr.aria-expanded]="filtrosAbiertos()" (click)="filtrosAbiertos.set(!filtrosAbiertos())">Filtros{{filtrosActivos() ? ' activos' : ''}}</button><app-top-filters [cerrarAlClickFuera]="false" [soloCalendario]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters></div>
 </div>
 
 <div class="form-card" *ngIf="filtrosAbiertos()"><div class="form-grid">
@@ -17,13 +17,21 @@
   <div class="stat-card highlight">
     <span class="stat-label">Total de ingresos</span>
     <div class="stat-value">Q{{ totalIngresos() | number: '1.0-0' }}</div>
-    <svg class="mini-trend" viewBox="0 0 140 85" aria-hidden="true"><path d="M4 65 L25 47 L45 68 L117 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M105 8 H125 V28 Z" fill="currentColor" /></svg>
+    <svg class="mini-trend" viewBox="0 0 140 90" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="report-income-stroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#171614" stop-opacity=".08"/><stop offset=".55" stop-color="#171614"/><stop offset="1" stop-color="#171614"/></linearGradient></defs>
+      <path d="M7 70 18 57 37 78 72 43 94 21 105 32 126 9" fill="none" stroke="url(#report-income-stroke)" stroke-width="3.2" stroke-linejoin="miter"/>
+      <path d="M114 9H129V24Z" fill="#171614"/>
+    </svg>
   </div>
 
   <div class="stat-card highlight-dark">
     <span class="stat-label">Total de gastos</span>
     <div class="stat-value">Q{{ totalGastos() | number: '1.0-0' }}</div>
-    <svg class="mini-trend" viewBox="0 0 140 85" aria-hidden="true"><path d="M4 18 L25 35 L45 14 L117 74" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M105 74 H125 V54 Z" fill="currentColor" /></svg>
+    <svg class="mini-trend" viewBox="0 0 140 90" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="report-expense-stroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".06"/><stop offset=".72" stop-color="#ffffff"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs>
+      <path d="M7 19 18 30 39 8 69 40 96 67 107 55 126 76" fill="none" stroke="url(#report-expense-stroke)" stroke-width="3.2" stroke-linejoin="miter"/>
+      <path d="M115 78H130V63Z" fill="#ffffff"/>
+    </svg>
   </div>
 
   <div class="stat-card">
@@ -32,49 +40,13 @@
     <svg class="mini-icon" viewBox="0 0 140 100" aria-label="Balanza de ahorro" role="img"><path d="M70 8 V84 M25 29 Q46 29 70 17 Q94 29 115 29 M53 93 H87 M70 80 Q70 93 53 93 M70 80 Q70 93 87 93" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="70" cy="9" r="4" fill="currentColor"/><path d="M25 30 L9 69 H41 Z M115 30 L99 69 H131 Z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 69 Q25 87 42 69 Z M98 69 Q115 87 132 69 Z" fill="currentColor"/><circle cx="25" cy="28" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="115" cy="28" r="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
   </div>
 
-  <div class="chart-card categoria-card">
-    <h3>Reporte de gastos por categoria</h3>
-    <div class="categoria-body" *ngIf="resumenGastos().length; else sinCategorias">
-      <div class="categoria-lista">
-        <strong *ngFor="let c of topCategorias()">{{ c.nombre }}</strong>
-      </div>
-      <div class="donut-wrap-sm">
-        <svg viewBox="-2 -2 68 68" class="donut-sm" role="img" aria-label="Distribución de gastos por categoría">
-          <circle
-            *ngFor="let seg of resumenGastos(); let i = index"
-            cx="32" cy="32" r="28" fill="none"
-            [attr.stroke]="seg.color" stroke-width="9"
-            [attr.stroke-dasharray]="donutLargo(seg.total) + ' ' + (2 * 3.141592653589793 * 28)"
-            [attr.stroke-dashoffset]="donutOffset(i)"
-            transform="rotate(-90 32 32)"><title>{{seg.nombre}}: Q{{seg.total | number:"1.2-2"}}</title></circle>
-        </svg>
-      </div>
-    </div>
-    <ng-template #sinCategorias>
-      <p class="empty-hint">Todavia no hay gastos registrados.</p>
-    </ng-template>
-  </div>
+  <app-category-donut class="categoria-card" titulo="Reporte de gastos por categor&#237;a" [datos]="resumenGastos()" [etiqueta]="rango().etiqueta"></app-category-donut>
 </div>
 
 <div class="chart-card comparativa-card">
-  <h3>Comparativa mensual · últimos seis meses con movimientos</h3>
+  <h3>Comparativa mensual del periodo</h3>
   <div class="comparativa-body">
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="xMidYMid meet" *ngIf="datosPorMes().length; else sinDatos">
-      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
-      <line x1="30" x2="450" [attr.y1]="yValor(0)" [attr.y2]="yValor(0)" stroke="var(--d-ink-soft)" stroke-width="0.6" />
-      <ng-container *ngFor="let p of datosPorMes(); let i = index">
-        <rect [attr.x]="30 + (i + 0.5) * 420 / datosPorMes().length - 22" [attr.y]="yBarra(p.ingreso)" width="12" [attr.height]="alturaBarra(p.ingreso)" rx="3" fill="var(--d-accent)"><title>{{p.label}} · Ingresos Q{{p.ingreso | number:"1.2-2"}}</title></rect>
-        <rect [attr.x]="30 + (i + 0.5) * 420 / datosPorMes().length - 6" [attr.y]="yBarra(p.gasto)" width="12" [attr.height]="alturaBarra(p.gasto)" rx="3" fill="var(--d-chart-expense, var(--d-dark))"><title>{{p.label}} · Egresos Q{{p.gasto | number:"1.2-2"}}</title></rect>
-        <rect [attr.x]="30 + (i + 0.5) * 420 / datosPorMes().length + 10" [attr.y]="yBarra(p.ahorro)" width="12" [attr.height]="alturaBarra(p.ahorro)" rx="3" fill="#a18c6a"><title>{{p.label}} · Ahorro neto Q{{p.ahorro | number:'1.2-2'}}</title></rect>
-        <text [attr.x]="30 + (i + 0.5) * 420 / datosPorMes().length" y="214" class="axis-label">{{ p.label }}</text>
-      </ng-container>
-    </svg>
-    <ng-template #sinDatos>
-      <p class="empty-hint">Todavia no hay datos suficientes para graficar.</p>
-    </ng-template>
-    <div class="mini-legend vertical">
-      <span><i style="background: var(--d-accent)"></i> Ingresos</span>
-      <span><i style="background: var(--d-chart-expense, var(--d-dark))"></i> Gastos</span><span><i style="background: #a18c6a"></i> Ahorro neto</span>
-    </div>
+    <app-bar-chart [datos]="datosBarras()" [series]="['Ingresos','Gastos','Ahorro neto']" titulo="Ingresos y Gastos y Ahorro neto en quetzales"></app-bar-chart>
+
   </div>
 </div>

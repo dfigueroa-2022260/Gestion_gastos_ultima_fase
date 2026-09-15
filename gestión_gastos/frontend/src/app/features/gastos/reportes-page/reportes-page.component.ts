@@ -1,3 +1,5 @@
+import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
+import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { FormsModule } from '@angular/forms';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
 import { enRango, resumir } from '../../../shared/registro.utils';
@@ -29,11 +31,12 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-reportes-page',
   standalone: true,
-  imports: [FormsModule, TopFiltersComponent, CommonModule],
+  imports: [CategoryDonutComponent, BarChartComponent, FormsModule, TopFiltersComponent, CommonModule],
   templateUrl: './reportes-page.component.html',
   styleUrl: './reportes-page.component.scss',
 })
 export class ReportesPageComponent implements OnInit {
+  readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.ingreso, p.gasto, p.ahorro]})));
   readonly filtrosAbiertos = signal(false);
   readonly tipo = signal('todos');
   readonly categoria = signal('');
@@ -102,7 +105,6 @@ export class ReportesPageComponent implements OnInit {
 
     return Array.from(mapa.entries())
       .sort((a, b) => (a[0] > b[0] ? 1 : -1))
-      .slice(-6)
       .map(([clave, val]) => {
         const mes = Number(clave.split('-')[1]);
         return { label: NOMBRES_MES[mes].slice(0, 3) + " " + clave.slice(2,4), ...val };

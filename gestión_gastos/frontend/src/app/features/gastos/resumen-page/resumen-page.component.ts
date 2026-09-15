@@ -1,3 +1,4 @@
+import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { forkJoin, catchError, of, finalize } from 'rxjs';
 import { inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -5,7 +6,7 @@ import { Plan, PlanService } from './plan.service';
 import { DialogService } from '../../../shared/dialog.service';
 import { hoyLocal } from '../../../shared/registro.utils';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
-import { enRango } from '../../../shared/registro.utils';
+import { coincideMovimiento, enRango } from '../../../shared/registro.utils';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { Ahorro } from '../ahorro-page/ahorro.models';
@@ -31,19 +32,20 @@ const DIAS_SEMANA = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 @Component({
   selector: 'app-resumen-page',
   standalone: true,
-  imports: [FormsModule, TopFiltersComponent, CommonModule],
+  imports: [BarChartComponent, FormsModule, TopFiltersComponent, CommonModule],
   templateUrl: './resumen-page.component.html',
   styleUrl: './resumen-page.component.scss',
 })
 export class ResumenPageComponent implements OnInit {
+  readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.ingreso, p.gasto]})));
   readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
   onRango(r: RangoFechas): void { this.rango.set(r); }
   private readonly gastosTodos = signal<Gasto[]>([]);
-  readonly gastos = computed(() => this.gastosTodos().filter(r => enRango(r.fecha, this.rango())));
+  readonly gastos = computed(() => this.gastosTodos().filter(r => coincideMovimiento(r, this.rango())));
   private readonly ingresosTodos = signal<Ingreso[]>([]);
-  readonly ingresos = computed(() => this.ingresosTodos().filter(r => enRango(r.fecha, this.rango())));
+  readonly ingresos = computed(() => this.ingresosTodos().filter(r => coincideMovimiento(r, this.rango())));
   private readonly ahorrosTodos = signal<Ahorro[]>([]);
-  readonly ahorros = computed(() => this.ahorrosTodos().filter(r => enRango(r.fecha, this.rango())));
+  readonly ahorros = computed(() => this.ahorrosTodos().filter(r => coincideMovimiento(r, this.rango())));
   readonly cargando = signal(true);
 
   readonly planService = inject(PlanService);
@@ -113,10 +115,9 @@ export class ResumenPageComponent implements OnInit {
 
     return Array.from(mapa.entries())
       .sort((a, b) => (a[0] > b[0] ? 1 : -1))
-      .slice(-6)
       .map(([clave, val]) => {
         const mes = Number(clave.split('-')[1]);
-        return { label: NOMBRES_MES[mes].slice(0, 3), ...val };
+        return { label: NOMBRES_MES[mes].slice(0, 3) + " " + clave.slice(2, 4), ...val };
       });
   });
 

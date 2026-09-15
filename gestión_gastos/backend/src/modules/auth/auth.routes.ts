@@ -1,3 +1,4 @@
+import googleRoutes from './google/google.routes';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { generarToken } from '../../utils/jwt.util';
 import { Router } from "express";
@@ -11,6 +12,7 @@ import {
 } from "./auth.schema";
 
 const router = Router();
+router.use('/google', googleRoutes);
 router.post('/renovar', authMiddleware, (req, res) => {
   res.json({token: generarToken({usuarioId:req.usuarioId!, rol:req.usuarioRol!})});
 });

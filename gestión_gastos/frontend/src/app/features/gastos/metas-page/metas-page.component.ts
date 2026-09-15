@@ -1,3 +1,4 @@
+import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
 import { enRango } from '../../../shared/registro.utils';
 import { inject } from '@angular/core';
@@ -11,7 +12,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { AhorroService } from '../ahorro-page/ahorro.service';
+
 import { Meta, PrioridadMeta } from './meta.models';
 import { MetaService } from './meta.service';
 
@@ -36,11 +37,12 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-metas-page',
   standalone: true,
-  imports: [TopFiltersComponent, CommonModule, ReactiveFormsModule],
+  imports: [BarChartComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './metas-page.component.html',
   styleUrl: './metas-page.component.scss',
 })
 export class MetasPageComponent implements OnInit {
+  readonly datosBarras = computed(() => this.metas().map(m => ({label: m.nombre, valores: [Number(m.montoActual), Number(m.montoObjetivo)]})));
   readonly dialog = inject(DialogService);
   readonly metasTodas = signal<Meta[]>([]);
   readonly metas = computed(() => this.metasTodas().filter(m => enRango(m.createdAt, this.rango())));
@@ -53,25 +55,22 @@ export class MetasPageComponent implements OnInit {
  const anteriores: Record<string,string> = {'🏠':'home','🚗':'car','🎓':'education','❤️':'health','💻':'entertainment','✈️':'car'};
  return this.iconos.some(i=>i.key===icono) ? icono : (anteriores[icono] ?? 'tag');
  }
-  onRango(r: RangoFechas): void { this.rango.set(r); this.cargarTendencia(); }
+  onRango(r: RangoFechas): void { this.rango.set(r); }
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly guardando = signal(false);
   readonly errorForm = signal<string | null>(null);
   readonly modoEdicion = signal(false);
 
-  readonly tendencia = signal<PuntoTendencia[]>([]);
+
 
   readonly form: FormGroup<MetaForm>;
 
-  readonly maxTendencia = computed(() =>
-    Math.max(...this.tendencia().map((p) => p.total), 1)
-  );
+
 
   constructor(
     private readonly fb: FormBuilder,
-    private readonly metaService: MetaService,
-    private readonly ahorroService: AhorroService
+    private readonly metaService: MetaService
   ) {
     this.form = this.fb.nonNullable.group({
       icono: ['tag'],
@@ -85,7 +84,7 @@ export class MetasPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarMetas();
-    this.cargarTendencia();
+
   }
 
   private cargarMetas(): void {
@@ -99,32 +98,6 @@ export class MetasPageComponent implements OnInit {
         this.error.set('No se pudieron cargar las metas.');
         this.cargando.set(false);
       },
-    });
-  }
-
-  // Tendencia real: ahorro neto acumulado mes a mes, a partir de tus
-  // depositos/retiros reales (no es una proyeccion inventada).
-  private cargarTendencia(): void {
-    this.ahorroService.listar().subscribe({
-      next: (ahorros) => {
-        const mapa = new Map<string, number>();
-        for (const a of ahorros.filter(a => enRango(a.fecha,this.rango()))) {
-          const f = new Date(a.fecha.slice(0, 10) + 'T12:00:00');
-          const clave = `${f.getFullYear()}-${String(f.getMonth()).padStart(2, '0')}`;
-          const signo = a.tipo === 'RETIRO' ? -1 : 1;
-          mapa.set(clave, (mapa.get(clave) ?? 0) + signo * Number(a.monto));
-        }
-
-        const ordenado = Array.from(mapa.entries()).sort((a, b) => (a[0] > b[0] ? 1 : -1));
-        let acumulado = 0;
-        const puntos = ordenado.map(([clave, val]) => {
-          acumulado += val;
-          const mes = Number(clave.split('-')[1]);
-          return { label: NOMBRES_MES[mes], total: acumulado };
-        });
-        this.tendencia.set(puntos.slice(-8));
-      },
-      error: () => this.error.set("No se pudo cargar la tendencia de ahorro."),
     });
   }
 
@@ -209,17 +182,4 @@ export class MetasPageComponent implements OnInit {
       });
   }
 
-  alturaPunto(total: number): number {
-    return (total / this.maxTendencia()) * 140;
-  }
-
-  yPunto(total: number): number {
-    return 180 - this.alturaPunto(total);
-  }
-
-  puntosLinea(): string {
-    return this.tendencia()
-      .map((p, i) => `${30 + i * 55},${this.yPunto(p.total)}`)
-      .join(' ');
-  }
 }

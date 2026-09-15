@@ -1,6 +1,6 @@
 <div class="content-header">
   <h1>CASH TRACK <span>Gastos</span></h1>
-  <app-top-filters [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
+  <app-top-filters [movimientos]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
 
 <div class="error-banner" *ngIf="error()">{{ error() }}</div>
@@ -113,58 +113,8 @@
 <div class="charts-grid">
   <div class="chart-card">
     <h3>Por mes</h3>
-    <svg class="line-chart" viewBox="0 0 460 220" preserveAspectRatio="xMidYMid meet" *ngIf="datosPorMes().length; else sinDatosMes">
-      <line *ngFor="let f of [0, 0.25, 0.5, 0.75, 1]" x1="30" [attr.y1]="200 - f * 160" x2="450" [attr.y2]="200 - f * 160" class="grid-line" />
-      <ng-container *ngFor="let p of datosPorMes(); let i = index">
-        <rect
-          [attr.x]="30 + i * 60 + 8"
-          [attr.y]="yBarra(p.total)"
-          width="28"
-          [attr.height]="alturaBarra(p.total)"
-          rx="10"
-          [attr.fill]="i % 2 === 0 ? 'var(--d-accent)' : 'var(--d-dark)'"
-        />
-        <text [attr.x]="30 + i * 60 + 22" y="214" class="axis-label">{{ p.label }}</text>
-      </ng-container>
-    </svg>
-    <ng-template #sinDatosMes>
-      <p class="empty-hint">Todavia no hay gastos registrados para graficar.</p>
-    </ng-template>
+    <app-bar-chart [datos]="datosBarras()" [series]="['Gastos']" titulo="Gastos en quetzales"></app-bar-chart>
   </div>
 
-  <div class="chart-card">
-    <h3>Gastos por categoria</h3>
-    <div class="donut-wrap" *ngIf="resumenCategorias().length; else sinDatosDonut">
-      <div class="donut-info">
-        <span>Total del período</span>
-        <strong>Q{{ totalResumen() | number: '1.0-2' }}</strong>
-
-      </div>
-      <svg class="donut-chart" viewBox="0 0 100 100">
-        <text *ngIf="resumenCategorias().length === 1" x="50" y="53" text-anchor="middle" font-size="10" fill="currentColor">100%</text>
-        <circle
-          *ngFor="let seg of resumenCategorias(); let i = index"
-          cx="50"
-          cy="50"
-          r="40"
-          fill="none"
-          [attr.stroke]="seg.color"
-          stroke-width="14"
-          [attr.stroke-dasharray]="donutLargo(seg.total) + ' ' + (2 * 3.141592653589793 * 40)"
-          [attr.stroke-dashoffset]="donutOffset(i)"
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-    </div>
-    <ng-template #sinDatosDonut>
-      <p class="empty-hint">Todavia no hay gastos registrados para graficar.</p>
-    </ng-template>
-
-    <div class="donut-legend" *ngIf="resumenCategorias().length">
-      <div class="legend-row" *ngFor="let seg of resumenCategorias()">
-        <span class="legend-dot" [style.background]="seg.color"></span>
-        {{ seg.nombre }} — {{ porcentaje(seg.total) | number: '1.0-1' }}%
-      </div>
-    </div>
-  </div>
+  <app-category-donut titulo="Gastos por categor&#237;a" [datos]="resumenCategorias()" [etiqueta]="rango().etiqueta" detalle=""></app-category-donut>
 </div>

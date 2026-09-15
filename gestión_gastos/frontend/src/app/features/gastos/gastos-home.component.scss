@@ -16,6 +16,7 @@
 }
 
 .dashboard {
+  --sidebar-width: 220px;
   display: flex;
   min-height: 100vh;
   background: var(--d-bg);
@@ -147,17 +148,10 @@
   align-items: center;
   gap: 24px;
   background: var(--d-card);
-  // El logo/wordmark van cerca de la esquina izquierda del bar (no
-  // desplazados hasta donde termina el sidebar), igual que en la
-  // referencia: el topbar cubre todo el sidebar por debajo de todas formas.
-  padding: 14px 32px 14px 36px;
-  // El topbar cubre TODO el ancho del sidebar (margin-left = -220px, su
-  // mismo ancho) para que quede como en la imagen de referencia, en vez
-  // de una franja angosta. margin-top solo lo justo para no tapar los
-  // iconos de arriba (campana / colapsar); sin margen a la derecha para
-  // que no quede un marco de espacio vacio alrededor.
-  margin: 64px 0 0 -220px;
-  border-radius: 18px;
+  padding: 14px 28px;
+  // Compensar el ancho actual del sidebar mantiene el header en su sitio.
+  margin: 64px 24px 0 calc(24px - var(--sidebar-width));
+  border-radius: 999px;
   box-shadow: 0 12px 26px rgba(43, 42, 40, 0.14);
   position: relative;
   z-index: 2;
@@ -443,3 +437,20 @@
     display: none;
   }
 }
+
+.menu-colapsado { --sidebar-width: 100px; }
+@media (min-width: 761px) {
+  .sidebar-top { position: absolute; top: 15px; left: 8px; right: 8px; flex-shrink: 0; }
+  .sidebar-nav { margin-top: 56px; }
+}
+@media (max-width: 1000px) {
+  .topbar { gap: 12px; padding-inline: 16px; }
+  .pill { padding-inline: 10px; }
+  .user-info { display: none; }
+}
+@media (max-width: 760px) {
+  .topbar { margin: 16px 12px 10px; }
+  .search-panel { position: fixed; top: 90px; left: 12px; right: 12px; width: auto; }
+}
+
+.menu-colapsado .sidebar-top .icon-circle:last-child svg { transform: rotate(180deg); }

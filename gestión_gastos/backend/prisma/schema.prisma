@@ -23,6 +23,7 @@ model Usuario {
   email          String      @unique
   password       String
   rol            Rol         @default(USUARIO)
+  googleId       String?     @unique
   resetToken     String?     @unique
   resetTokenExp  DateTime?
   createdAt      DateTime    @default(now())

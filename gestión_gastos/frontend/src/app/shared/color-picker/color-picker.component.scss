@@ -1,0 +1,13 @@
+:host { display: block; margin: 12px 0 22px; }
+.palette { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.swatch { position: relative; display: grid; place-items: center; width: 36px; height: 36px; padding: 4px; border: 1px solid transparent; border-radius: 50%; background: transparent; cursor: pointer; }
+.swatch span { width: 26px; height: 26px; border-radius: 50%; }
+.swatch.selected { border-color: var(--d-accent); background: var(--d-surface); }
+.swatch svg { position: absolute; width: 18px; height: 18px; stroke: white; fill: none; stroke-width: 2; }
+.custom-color { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--d-border); border-radius: 16px; background: var(--d-surface); color: var(--d-ink); cursor: pointer; overflow: hidden; }
+.preview { width: 32px; height: 32px; border-radius: 10px; border: 1px solid #0001; flex-shrink: 0; }
+.custom-copy { display: grid; gap: 3px; flex: 1; }
+strong { font: 500 12px Inter, sans-serif; } small { font: 11px Inter, sans-serif; color: var(--d-ink-soft); }
+.custom-color > svg { width: 18px; height: 18px; fill: none; stroke: var(--d-accent); stroke-width: 1.6; }
+input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.custom-color:focus-within, .swatch:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 3px; }

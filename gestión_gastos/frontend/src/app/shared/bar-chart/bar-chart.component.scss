@@ -1,0 +1,12 @@
+:host { display: block; min-width: 0; width: 100%; }
+.bar-scroll { overflow-x: auto; width: 100%; }
+svg { width: 100%; display: block; }
+.reference-line { stroke: var(--d-ink-soft, #7a746a); stroke-opacity: .2; stroke-width: 1; }
+.zero-line { stroke: var(--d-ink-soft, #7a746a); stroke-width: .7; }
+.reference-number, .group-label, .unit { fill: var(--d-ink-soft, #7a746a); font: 11px Inter, sans-serif; }
+.reference-number { text-anchor: end; }
+.group-label { text-anchor: middle; }
+.bar-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; }
+.bar-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.bar-legend i { width: 9px; height: 9px; border-radius: 50%; }
+rect:focus { outline: none; stroke: var(--d-ink); stroke-width: 2; }

@@ -158,3 +158,50 @@
 .categoria-lista { min-width: 0; strong { font-size: 14px; overflow-wrap: anywhere; } }
 .comparativa-body .line-chart { min-width: 0; }
 .form-field { min-width: 0; input, select { width: 100%; } }
+
+.reportes-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(300px, 1.6fr); }
+.reportes-grid > .stat-card { padding: 22px; min-height: 240px; }
+.reportes-grid .mini-trend { display: block; width: 100%; max-width: 220px; height: 88px; align-self: center; margin-top: auto; padding-top: 12px; overflow: visible; }
+.trend-line, .trend-arrow { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.trend-guide { fill: none; stroke: currentColor; stroke-width: 1; opacity: .15; }
+.categoria-card { min-width: 0; }
+@media (max-width: 1280px) { .reportes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .reportes-grid { grid-template-columns: minmax(0, 1fr); } }
+
+// Tarjetas de la referencia: texto arriba y trazos angulares al pie.
+.reportes-grid > .stat-card:is(.highlight, .highlight-dark) {
+  position: relative;
+  min-height: 230px;
+  padding: 16px 10px 106px;
+  border: 0;
+  border-radius: 28px;
+  box-shadow: none;
+  color: #fff;
+}
+.reportes-grid > .stat-card.highlight { background: #e8844f; }
+.reportes-grid > .stat-card.highlight-dark { background: #37342f; }
+.reportes-grid :is(.highlight, .highlight-dark) .stat-label {
+  margin: 0;
+  font-size: clamp(14px, 1.12vw, 18px);
+  font-weight: 600;
+  letter-spacing: -.6px;
+  line-height: 1.3;
+}
+.reportes-grid :is(.highlight, .highlight-dark) .stat-value {
+  margin: 34px 4px 0;
+  font-size: clamp(25px, 2vw, 34px);
+  font-weight: 500;
+  letter-spacing: -1px;
+  line-height: 1.15;
+}
+.reportes-grid .mini-trend {
+  position: absolute;
+  bottom: 9px;
+  left: 8px;
+  width: calc(100% - 16px);
+  max-width: none;
+  height: 92px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}

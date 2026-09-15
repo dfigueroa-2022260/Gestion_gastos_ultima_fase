@@ -1,0 +1,9 @@
+<div class="palette" role="group" aria-label="Color de la categor&#237;a">
+ <button *ngFor="let opcion of paleta" type="button" class="swatch" [class.selected]="color.toLowerCase() === opcion.color" [attr.aria-pressed]="color.toLowerCase() === opcion.color" [attr.aria-label]="opcion.nombre" [title]="opcion.nombre" (click)="elegir(opcion.color)"><span [style.background]="opcion.color"></span><svg *ngIf="color.toLowerCase() === opcion.color" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 3 3 7-7" /></svg></button>
+</div>
+<label class="custom-color">
+ <span class="preview" [style.background]="color"></span>
+ <span class="custom-copy"><strong>Personalizar color</strong><small>{{color.toUpperCase()}}</small></span>
+ <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5M4 20l4-1L20 7a2 2 0 0 0-3-3L5 16z" /></svg>
+ <input type="color" [value]="color" (change)="elegir($any($event.target).value)" aria-label="Elegir color personalizado" />
+</label>

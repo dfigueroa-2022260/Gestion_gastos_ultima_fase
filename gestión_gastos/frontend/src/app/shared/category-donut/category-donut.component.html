@@ -1,0 +1,23 @@
+<section class="overview-chart">
+ <h3>{{titulo}}</h3>
+ <div class="overview-chart-surface income-surface">
+  <ng-container *ngIf="segmentos().length; else vacio">
+   <div class="income-summary">
+    <span>{{seleccion()?.nombre ?? 'Total del periodo'}}</span>
+    <strong>Q{{(seleccion()?.total ?? total()) | number:'1.0-2'}}</strong>
+    <button *ngIf="seleccion()" class="income-reset" type="button" (click)="seleccionado.set(null)">Ver total</button>
+    <small>{{etiqueta}}</small>
+   </div>
+   <svg class="income-donut" viewBox="0 0 160 160" role="img" [attr.aria-label]="titulo">
+    <circle *ngFor="let seg of segmentos(); let i = index" cx="80" cy="80" r="48" fill="none" [attr.stroke]="color(i)" stroke-width="28" [attr.stroke-dasharray]="largo(seg.total) + ' ' + circunferencia" [attr.stroke-dashoffset]="offset(i)" transform="rotate(-90 80 80)" [attr.opacity]="seleccion() && seleccion()?.categoriaId !== seg.categoriaId ? 0.35 : 1" (click)="seleccionar(seg.categoriaId)">
+     <title>{{seg.nombre}}: Q{{seg.total | number:'1.2-2'}} ({{porcentaje(seg.total) | number:'1.1-1'}}%)</title>
+    </circle>
+   </svg>
+   <div class="income-legend">
+    <button *ngFor="let seg of segmentos(); let i = index" type="button" (click)="seleccionar(seg.categoriaId)" [attr.aria-pressed]="seleccion()?.categoriaId === seg.categoriaId"><i [style.background]="color(i)"></i><span>{{seg.nombre}}</span><span>Q{{seg.total | number:'1.0-2'}} <small>{{porcentaje(seg.total) | number:'1.1-1'}}%</small></span></button>
+   </div>
+  </ng-container>
+  <ng-template #vacio><p class="empty-hint">No hay datos para los filtros seleccionados.</p></ng-template>
+  <p class="chart-detail" *ngIf="detalle">{{detalle}}</p>
+ </div>
+</section>

@@ -13,3 +13,11 @@ export function resumir(registros: {monto: number; categoriaId: string; categori
  }
  return [...mapa.values()];
 }
+
+export function coincideMovimiento(registro: { fecha: string; monto: number; descripcion?: string | null; categoria: { nombre: string } }, rango: { desde: string | null; hasta: string | null; texto?: string; minimo?: number | null; maximo?: number | null }): boolean {
+ const texto = (rango.texto ?? '').trim().toLocaleLowerCase();
+ return enRango(registro.fecha, rango)
+   && (!texto || ((registro.descripcion ?? '') + ' ' + registro.categoria.nombre).toLocaleLowerCase().includes(texto))
+   && (rango.minimo == null || Number(registro.monto) >= rango.minimo)
+   && (rango.maximo == null || Number(registro.monto) <= rango.maximo);
+}

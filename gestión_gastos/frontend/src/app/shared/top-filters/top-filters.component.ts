@@ -1,12 +1,15 @@
 import { hoyLocal } from '../registro.utils';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 export interface RangoFechas {
   desde: string | null;
   hasta: string | null;
   etiqueta: string;
+  texto?: string;
+  minimo?: number | null;
+  maximo?: number | null;
 }
 
 const hoyISO = (d: Date) => hoyLocal(d);
@@ -24,10 +27,40 @@ const hoyISO = (d: Date) => hoyLocal(d);
   styleUrl: './top-filters.component.scss',
 })
 export class TopFiltersComponent {
+  private readonly elemento = inject(ElementRef<HTMLElement>);
+  @Input() cerrarAlClickFuera = true;
+
+  @HostListener('document:click', ['$event'])
+  onClickFuera(event: MouseEvent): void {
+    if (this.cerrarAlClickFuera && this.abierto() && !event.composedPath().includes(this.elemento.nativeElement)) {
+      this.cerrar();
+    }
+  }
+
   @Input() set rango(value: RangoFechas) {
     this.desde.set(value.desde ?? ''); this.hasta.set(value.hasta ?? ''); this.etiquetaActual.set(value.etiqueta);
+    this.texto.set(value.texto ?? ''); this.minimo.set(value.minimo ?? null); this.maximo.set(value.maximo ?? null);
   }
   @Input() soloCalendario = false;
+  @Input() movimientos = false;
+  readonly modo = signal<'filtros' | 'calendario'>('calendario');
+  readonly texto = signal('');
+  readonly minimo = signal<number | null>(null);
+  readonly maximo = signal<number | null>(null);
+  abrir(modo: 'filtros' | 'calendario'): void {
+    if (this.abierto() && this.modo() === modo) this.cerrar();
+    else { this.modo.set(modo); this.error.set(''); this.abierto.set(true); }
+  }
+  aplicarFiltros(): void {
+    this.error.set('');
+    if ((this.minimo() != null && this.minimo()! < 0) || (this.maximo() != null && this.maximo()! < 0) || (this.minimo() != null && this.maximo() != null && this.minimo()! > this.maximo()!)) {
+      this.error.set('Revisa el importe mínimo y máximo.'); return;
+    }
+    this.emitir(this.etiquetaActual()); this.cerrar();
+  }
+  limpiarFiltros(): void {
+    this.texto.set(''); this.minimo.set(null); this.maximo.set(null); this.aplicarFiltros();
+  }
   @Output() rangoChange = new EventEmitter<RangoFechas>();
 
   readonly abierto = signal(false);
@@ -88,6 +121,7 @@ export class TopFiltersComponent {
       desde: this.desde() || null,
       hasta: this.hasta() || null,
       etiqueta,
+      texto: this.texto().trim(), minimo: this.minimo(), maximo: this.maximo(),
     });
   }
 }

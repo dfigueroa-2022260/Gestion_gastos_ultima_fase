@@ -61,6 +61,14 @@ export class AuthService {
       .pipe(tap((res) => this.guardarSesion(res)));
   }
 
+  configGoogle(): Observable<{ clientId: string | null; challenge?: string }> {
+    return this.http.get<{ clientId: string | null; challenge?: string }>(this.baseUrl + '/google/config');
+  }
+
+  loginGoogle(credential: string, challenge: string, password?: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(this.baseUrl + '/google', { credential, challenge, password }).pipe(tap(res => this.guardarSesion(res)));
+  }
+
   registro(data: RegistroRequest): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/registro`, data)
