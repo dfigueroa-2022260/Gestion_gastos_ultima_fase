@@ -13,7 +13,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "test:balance": "node tests/balance.test.cjs",
+    "test:balance:integration": "node tests/balance.integration.cjs"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

@@ -2,18 +2,19 @@
   <h1>CASH TRACK <span>Ahorro</span></h1>
   <app-top-filters [movimientos]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
+<app-balance-notice></app-balance-notice>
 
 <div class="error-banner" *ngIf="error()">{{ error() }}</div>
 
 <div class="gastos-top">
   <div class="stat-card highlight">
     <div class="stat-top">
-      <span>Ahorros totales</span>
+      <span>Ahorro disponible al cierre</span>
       <span class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
       </span>
     </div>
-    <div class="stat-value">Q{{ totalAhorros() | number: '1.0-2' }}</div>
+    <div class="stat-value">{{balance.datos() ? 'Q' + (balance.datos()!.ahorro | number:'1.0-2') : '—'}}</div>
     <div class="stat-sub">{{ ahorros().length }} registros</div>
   </div>
 
@@ -28,7 +29,7 @@
 
   <div class="stat-card">
     <div class="stat-top">
-      <span>Ahorro del mes</span>
+      <span>Depósitos de este mes</span>
       <span class="stat-icon dark">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
       </span>
@@ -128,7 +129,7 @@
 <div class="charts-grid">
   <div class="chart-card">
     <h3>Por mes</h3>
-    <app-bar-chart [datos]="datosBarras()" [series]="['Ahorro neto']" titulo="Ahorro neto en quetzales"></app-bar-chart>
+    <app-bar-chart [datos]="datosBarras()" [series]="['Depósitos','Retiros']" titulo="Depósitos y retiros en quetzales"></app-bar-chart>
   </div>
 
   <app-category-donut titulo="Ahorro por categor&#237;a" [datos]="resumenCategorias()" [etiqueta]="rango().etiqueta" detalle="Distribuci&#243;n de aportes de ahorro del periodo."></app-category-donut>

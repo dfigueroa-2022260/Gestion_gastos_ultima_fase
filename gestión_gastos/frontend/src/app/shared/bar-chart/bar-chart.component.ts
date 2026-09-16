@@ -20,7 +20,7 @@ export class BarChartComponent {
  y(valor: number): number { const e = this.escala(); return 205 - (valor - e.min) / (e.max - e.min) * 165; }
  x(index: number): number { return 130 + index * 80; }
  anchoBarra(cantidad: number): number { return Math.min(28, 54 / Math.max(1, cantidad)); }
- color(index: number): string { return ['var(--d-accent, #e2672e)', 'var(--d-chart-expense, #34312d)', '#a18c6a'][index % 3]; }
+ color(index: number): string { return ['var(--d-accent, #e2672e)', 'var(--d-chart-expense, #34312d)', '#a18c6a', '#778c81'][index % 4]; }
  altura(valor: number): number { return Math.abs(this.y(valor) - this.y(0)); }
  techo(valor: number): number { return Math.min(this.y(valor), this.y(0)); }
 }

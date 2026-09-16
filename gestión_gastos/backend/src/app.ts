@@ -1,3 +1,4 @@
+import balanceRoutes from './modules/balance/balance.routes';
 import planRoutes from './modules/planes/plan.routes';
 import cors from "cors";
 import express from "express";
@@ -29,6 +30,7 @@ app.use("/api/ingresos", ingresoRoutes);
 app.use("/api/ahorros", ahorroRoutes);
 app.use("/api/metas", metaRoutes);
 app.use("/api/planes", planRoutes);
+app.use("/api/balance", balanceRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

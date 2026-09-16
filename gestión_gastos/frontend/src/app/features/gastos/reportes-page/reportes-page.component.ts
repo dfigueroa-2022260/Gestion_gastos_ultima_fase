@@ -1,3 +1,4 @@
+import { NonNegativeDirective } from '../../../shared/non-negative.directive';
 import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
 import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +18,7 @@ interface PuntoMes {
   gasto: number;
   ingreso: number;
   ahorro: number;
+  retiro: number;
 }
 
 const NOMBRES_MES = [
@@ -31,12 +33,12 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-reportes-page',
   standalone: true,
-  imports: [CategoryDonutComponent, BarChartComponent, FormsModule, TopFiltersComponent, CommonModule],
+  imports: [NonNegativeDirective, CategoryDonutComponent, BarChartComponent, FormsModule, TopFiltersComponent, CommonModule],
   templateUrl: './reportes-page.component.html',
   styleUrl: './reportes-page.component.scss',
 })
 export class ReportesPageComponent implements OnInit {
-  readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.ingreso, p.gasto, p.ahorro]})));
+  readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.ingreso, p.gasto, p.ahorro, p.retiro]})));
   readonly filtrosAbiertos = signal(false);
   readonly tipo = signal('todos');
   readonly categoria = signal('');
@@ -44,7 +46,7 @@ export class ReportesPageComponent implements OnInit {
   readonly minimo = signal<number | null>(null);
   readonly maximo = signal<number | null>(null);
   readonly categoriasFiltro = computed(() => Array.from(new Map([...this.gastosTodos(), ...this.ingresosTodos(), ...this.ahorrosTodos()].map(r => [r.categoriaId, r.categoria])).values()).sort((a,b) => a.nombre.localeCompare(b.nombre)));
-  readonly rangoMontoInvalido = computed(() => this.minimo() !== null && this.maximo() !== null && this.minimo()! > this.maximo()!);
+  readonly rangoMontoInvalido = computed(() => (this.minimo() != null && this.minimo()! < 0) || (this.maximo() != null && this.maximo()! < 0) || (this.minimo() !== null && this.maximo() !== null && this.minimo()! > this.maximo()!));
   readonly filtrosActivos = computed(() => this.tipo() !== 'todos' || !!this.categoria() || !!this.busqueda() || this.minimo() !== null || this.maximo() !== null);
   limpiarFiltros(): void { this.tipo.set('todos'); this.categoria.set(''); this.busqueda.set(''); this.minimo.set(null); this.maximo.set(null); }
   coincide(r: Gasto | Ingreso | Ahorro, tipo: string): boolean {
@@ -75,7 +77,7 @@ export class ReportesPageComponent implements OnInit {
 
   readonly totalAhorros = computed(() =>
     this.ahorros().reduce(
-      (s, a) => s + (a.tipo === 'RETIRO' ? -Number(a.monto) : Number(a.monto)),
+      (s, a) => s + (a.tipo === 'RETIRO' ? 0 : Number(a.monto)),
       0
     )
   );
@@ -89,19 +91,19 @@ export class ReportesPageComponent implements OnInit {
   );
 
   readonly datosPorMes = computed<PuntoMes[]>(() => {
-    const mapa = new Map<string, { gasto: number; ingreso: number; ahorro: number }>();
+    const mapa = new Map<string, { gasto: number; ingreso: number; ahorro: number; retiro: number }>();
 
-    const acumular = (fechaStr: string, campo: 'gasto' | 'ingreso' | 'ahorro', monto: number) => {
+    const acumular = (fechaStr: string, campo: 'gasto' | 'ingreso' | 'ahorro' | 'retiro', monto: number) => {
       const f = new Date(fechaStr.slice(0, 10) + 'T12:00:00');
       const clave = `${f.getFullYear()}-${String(f.getMonth()).padStart(2, '0')}`;
-      const actual = mapa.get(clave) ?? { gasto: 0, ingreso: 0, ahorro: 0 };
+      const actual = mapa.get(clave) ?? { gasto: 0, ingreso: 0, ahorro: 0, retiro: 0 };
       actual[campo] += monto;
       mapa.set(clave, actual);
     };
 
     this.gastos().forEach((g) => acumular(g.fecha, 'gasto', Number(g.monto)));
     this.ingresos().forEach((i) => acumular(i.fecha, 'ingreso', Number(i.monto)));
-    this.ahorros().forEach(a => acumular(a.fecha, 'ahorro', Number(a.monto) * (a.tipo === 'RETIRO' ? -1 : 1)));
+    this.ahorros().forEach(a => acumular(a.fecha, a.tipo === 'RETIRO' ? 'retiro' : 'ahorro', Number(a.monto)));
 
     return Array.from(mapa.entries())
       .sort((a, b) => (a[0] > b[0] ? 1 : -1))

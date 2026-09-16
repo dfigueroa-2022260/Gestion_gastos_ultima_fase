@@ -1,3 +1,6 @@
+import { NonNegativeDirective } from '../../../shared/non-negative.directive';
+import { BalanceService } from '../../../shared/balance.service';
+import { BalanceNoticeComponent } from '../../../shared/balance-notice.component';
 import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
@@ -44,14 +47,24 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-ahorro-page',
   standalone: true,
-  imports: [BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule, RouterLink],
+  providers: [BalanceService],
+  imports: [NonNegativeDirective, BalanceNoticeComponent, BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './ahorro-page.component.html',
   styleUrl: './ahorro-page.component.scss',
 })
 export class AhorroPageComponent implements OnInit {
-  readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.total]})));
+  readonly balance = inject(BalanceService);
+  readonly datosBarras = computed(() => {
+    const meses = new Map<string, {label:string; valores:number[]}>();
+    for(const a of this.ahorros()) {
+      const mes=a.fecha.slice(0,7);
+      const punto=meses.get(mes) ?? {label:mes,valores:[0,0]};
+      punto.valores[a.tipo==='RETIRO'?1:0] += Number(a.monto); meses.set(mes,punto);
+    }
+    return [...meses].sort(([a],[b])=>a.localeCompare(b)).map(([,p])=>p);
+  });
   readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
-  onRango(r: RangoFechas): void { this.rango.set(r); }
+  onRango(r: RangoFechas): void { this.rango.set(r); this.balance.cargar(r.hasta); }
   readonly dialog = inject(DialogService);
   private readonly ahorrosTodos = signal<Ahorro[]>([]);
   readonly ahorros = computed(() => this.ahorrosTodos().filter(r => coincideMovimiento(r, this.rango())));
@@ -85,7 +98,7 @@ export class AhorroPageComponent implements OnInit {
     return this.ahorros()
       .filter((i) => {
         const f = new Date(i.fecha.slice(0, 10) + 'T12:00:00');
-        return f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
+        return i.tipo !== 'RETIRO' && f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
       })
       .reduce((sum, i) => sum + (i.tipo === 'RETIRO' ? -Number(i.monto) : Number(i.monto)), 0);
   });
@@ -140,6 +153,7 @@ export class AhorroPageComponent implements OnInit {
   }
 
   private cargarTodo(): void {
+    this.balance.cargar(this.rango().hasta);
     this.cargando.set(true);
     this.error.set(null);
 
@@ -201,7 +215,7 @@ export class AhorroPageComponent implements OnInit {
 
     this.ahorroService.eliminar(ahorro.id).subscribe({
       next: () => this.cargarTodo(),
-      error: () => this.error.set('No se pudo eliminar el registro.'),
+      error: (err) => this.error.set(err?.error?.error ?? 'No se pudo eliminar el registro.'),
     });
   }
 

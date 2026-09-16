@@ -1,3 +1,5 @@
+import { conSaldoValidado } from '../balance/balance.service';
+import { Prisma } from '@prisma/client';
 import { prisma } from "../../config/prisma";
 import { AppError } from "../../utils/AppError";
 import { GastoInput } from "./gasto.schema";
@@ -10,8 +12,8 @@ export const listarGastos = (usuarioId: string) => {
   });
 };
 
-const validarCategoria = async (usuarioId: string, categoriaId: string) => {
-  const categoria = await prisma.categoria.findFirst({
+const validarCategoria = async (tx: Prisma.TransactionClient, usuarioId: string, categoriaId: string) => {
+  const categoria = await tx.categoria.findFirst({
     where: { id: categoriaId, usuarioId },
   });
 
@@ -20,44 +22,44 @@ const validarCategoria = async (usuarioId: string, categoriaId: string) => {
   }
 };
 
-export const crearGasto = async (usuarioId: string, data: GastoInput) => {
-  await validarCategoria(usuarioId, data.categoriaId);
+export const crearGasto = async (usuarioId: string, data: GastoInput) => conSaldoValidado(usuarioId, async tx => {
+  await validarCategoria(tx, usuarioId, data.categoriaId);
 
-  return prisma.gasto.create({
+  return tx.gasto.create({
     data: { ...data, usuarioId },
     include: { categoria: true },
   });
-};
+});
 
 export const actualizarGasto = async (
   usuarioId: string,
   id: string,
   data: GastoInput
-) => {
-  const gasto = await prisma.gasto.findFirst({ where: { id, usuarioId } });
+) => conSaldoValidado(usuarioId, async tx => {
+  const gasto = await tx.gasto.findFirst({ where: { id, usuarioId } });
 
   if (!gasto) {
     throw new AppError("Gasto no encontrado", 404);
   }
 
-  await validarCategoria(usuarioId, data.categoriaId);
+  await validarCategoria(tx, usuarioId, data.categoriaId);
 
-  return prisma.gasto.update({
+  return tx.gasto.update({
     where: { id },
     data,
     include: { categoria: true },
   });
-};
+});
 
-export const eliminarGasto = async (usuarioId: string, id: string) => {
-  const gasto = await prisma.gasto.findFirst({ where: { id, usuarioId } });
+export const eliminarGasto = async (usuarioId: string, id: string) => conSaldoValidado(usuarioId, async tx => {
+  const gasto = await tx.gasto.findFirst({ where: { id, usuarioId } });
 
   if (!gasto) {
     throw new AppError("Gasto no encontrado", 404);
   }
 
-  await prisma.gasto.delete({ where: { id } });
-};
+  await tx.gasto.delete({ where: { id } });
+});
 
 export const resumenPorCategoria = async (usuarioId: string) => {
   const resultado = await prisma.gasto.groupBy({

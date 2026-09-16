@@ -1,3 +1,6 @@
+import { NonNegativeDirective } from '../../../shared/non-negative.directive';
+import { BalanceService } from '../../../shared/balance.service';
+import { BalanceNoticeComponent } from '../../../shared/balance-notice.component';
 import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { forkJoin, catchError, of, finalize } from 'rxjs';
 import { inject } from '@angular/core';
@@ -32,14 +35,16 @@ const DIAS_SEMANA = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 @Component({
   selector: 'app-resumen-page',
   standalone: true,
-  imports: [BarChartComponent, FormsModule, TopFiltersComponent, CommonModule],
+  providers: [BalanceService],
+  imports: [NonNegativeDirective, BalanceNoticeComponent, BarChartComponent, FormsModule, TopFiltersComponent, CommonModule],
   templateUrl: './resumen-page.component.html',
   styleUrl: './resumen-page.component.scss',
 })
 export class ResumenPageComponent implements OnInit {
+  readonly balance = inject(BalanceService);
   readonly datosBarras = computed(() => this.datosPorMes().map(p => ({label: p.label, valores: [p.ingreso, p.gasto]})));
   readonly rango = signal<RangoFechas>({desde:null,hasta:null,etiqueta:'Todo'});
-  onRango(r: RangoFechas): void { this.rango.set(r); }
+  onRango(r: RangoFechas): void { this.rango.set(r); this.balance.cargar(r.hasta); }
   private readonly gastosTodos = signal<Gasto[]>([]);
   readonly gastos = computed(() => this.gastosTodos().filter(r => coincideMovimiento(r, this.rango())));
   private readonly ingresosTodos = signal<Ingreso[]>([]);
@@ -65,9 +70,9 @@ export class ResumenPageComponent implements OnInit {
     if(!tipo || !this.nombrePlan.trim() || !Number.isFinite(monto) || monto<0.01 || monto>99999999.99 || (tipo!=='CUENTA' && !this.fechaPlan)) {this.error.set('Ingresa una descripción, un monto mayor a 0 y la fecha del plan.');return;}
     this.error.set('');
     this.guardandoPlan.set(true);
-    this.planService.crear({tipo,nombre:this.nombrePlan.trim(),monto,fecha:tipo==='CUENTA'?undefined:this.fechaPlan}).subscribe({next:p=>{this.planes.update(a=>[p,...a]);this.tipoPlan.set(null);this.guardandoPlan.set(false);},error:e=>{this.error.set(e?.error?.error ?? 'No se pudo guardar el plan.');this.guardandoPlan.set(false);}});
+    this.planService.crear({tipo,nombre:this.nombrePlan.trim(),monto,fecha:tipo==='CUENTA'?undefined:this.fechaPlan}).subscribe({next:p=>{this.planes.update(a=>[p,...a]);this.balance.cargar(this.rango().hasta);this.tipoPlan.set(null);this.guardandoPlan.set(false);},error:e=>{this.error.set(e?.error?.error ?? 'No se pudo guardar el plan.');this.guardandoPlan.set(false);}});
   }
-  async eliminarPlan(p:Plan):Promise<void>{if(!await this.dialog.confirm('¿Eliminar '+p.nombre+'?'))return;this.planService.eliminar(p.id).subscribe({next:()=>this.planes.update(a=>a.filter(x=>x.id!==p.id)),error:()=>this.error.set('No se pudo eliminar el plan.')});}
+  async eliminarPlan(p:Plan):Promise<void>{if(!await this.dialog.confirm('¿Eliminar '+p.nombre+'?'))return;this.planService.eliminar(p.id).subscribe({next:()=>{this.planes.update(a=>a.filter(x=>x.id!==p.id));this.balance.cargar(this.rango().hasta);},error:(err)=>this.error.set(err?.error?.error ?? 'No se pudo eliminar el plan.')});}
   gastoPresupuesto(p:Plan):number {return this.gastosTodos().filter(g=>g.fecha.slice(0,7)===p.fecha?.slice(0,7)).reduce((s,g)=>s+Number(g.monto),0);}
   seleccionarDia(dia:number|null):void {if(!dia)return;const f=hoyLocal(new Date(this.mesCalendario().getFullYear(),this.mesCalendario().getMonth(),dia));this.onRango({desde:f,hasta:f,etiqueta:f});}
   readonly mesCalendario = signal(new Date());
@@ -89,7 +94,7 @@ export class ResumenPageComponent implements OnInit {
   );
 
   readonly saldoTotal = computed(
-    () => this.totalIngresos() - this.totalGastos()
+    () => this.balance.datos()?.disponible ?? 0
   );
 
   readonly gastosDelMesPct = computed(() => this.totalIngresos() > 0 ? Math.round(this.totalGastos() / this.totalIngresos() * 100) : 0);
@@ -162,6 +167,7 @@ export class ResumenPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.balance.cargar(this.rango().hasta);
     const fallo = (mensaje: string) => { this.error.update(actual => actual ? actual + ' ' + mensaje : mensaje); return of([]); };
     forkJoin({
       planes: this.planService.listar().pipe(catchError(() => fallo('No se pudieron cargar las cuentas y presupuestos.'))),

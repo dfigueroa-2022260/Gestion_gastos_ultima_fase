@@ -2,9 +2,11 @@
   <h1>CASH TRACK <span>Resumen</span></h1>
   <app-top-filters [movimientos]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
+<app-balance-notice></app-balance-notice>
 
 <div class="form-card" *ngIf="tipoPlan()">
  <h3>{{tipoPlan()==='CUENTA'?'Agregar cuenta':tipoPlan()==='PROXIMO'?'Gasto próximo':'Crear presupuesto mensual'}}</h3>
+ <p *ngIf="tipoPlan()==='CUENTA'" class="balance-scope">Registra el dinero inicial de esta cuenta que aún no está registrado como ingreso.</p>
  <form (ngSubmit)="guardarPlan()" class="form-grid">
  <div class="form-field"><label for="nombrePlan">Descripción</label><input id="nombrePlan" name="nombrePlan" [(ngModel)]="nombrePlan" placeholder="Ej. Cuenta de ahorro" required /></div>
  <div class="form-field"><label for="montoPlan">Monto (Q)</label><input id="montoPlan" name="montoPlan" type="number" min="0.01" max="99999999.99" step="0.01" [(ngModel)]="montoPlan" placeholder="0.00" required /></div>
@@ -13,19 +15,20 @@
  </form>
 </div>
 <p *ngIf="cargando()" role="status">Cargando resumen...</p>
+<p class="balance-scope">Los saldos incluyen los fondos iniciales de cuentas y todos los movimientos hasta {{rango().hasta || "hoy"}}. Las búsquedas y la fecha inicial filtran el historial, no los fondos disponibles.</p>
 <div class="resumen-grid">
   <div class="stat-card highlight">
     <div class="stat-top">
-      <span>Ahorros totales</span>
+      <span>Ahorro disponible</span>
       <span class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
       </span>
     </div>
-    <div class="stat-value">Q{{ totalAhorros() | number: '1.0-2' }}</div>
+    <div class="stat-value">{{balance.datos() ? 'Q' + (balance.datos()!.ahorro | number:'1.0-2') : '—'}}</div>
   </div>
 
   <div class="stat-card list-card">
-    <h4>Saldos por cuenta</h4><button class="btn-primary" (click)="abrirPlan('CUENTA')">Agregar cuenta</button>
+    <h4>Fondos iniciales por cuenta</h4><button class="btn-primary" (click)="abrirPlan('CUENTA')">Agregar cuenta</button>
     <div class="mini-row" *ngFor="let c of cuentas()">
       <span>{{ c.nombre }}</span><button type="button" (click)="eliminarPlan(c)" aria-label="Eliminar cuenta">×</button>
       <strong>Q{{ c.monto | number: '1.0-0' }}</strong>
@@ -46,12 +49,12 @@
 
   <div class="stat-card highlight-dark">
     <div class="stat-top">
-      <span>Saldo total</span>
+      <span>Saldo disponible</span>
       <span class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </span>
     </div>
-    <div class="stat-value">Q{{ saldoTotal() | number: '1.0-2' }}</div>
+    <div class="stat-value">{{balance.datos() ? 'Q' + (saldoTotal() | number:'1.0-2') : '—'}}</div>
   </div>
 
   <div class="stat-card">
@@ -101,7 +104,7 @@
  <div class="budget-heading"><div><strong>{{p.nombre}}</strong><small>{{p.fecha | date:'MM/yyyy':'UTC'}}</small></div><button type="button" class="btn-secondary" (click)="eliminarPlan(p)">Eliminar</button></div>
  <div class="budget-amounts"><span>Gastado <strong>Q{{gastoPresupuesto(p) | number:'1.2-2'}}</strong></span><span>Presupuesto <strong>Q{{p.monto | number:'1.2-2'}}</strong></span></div>
  <div class="progress-track"><div class="progress-fill" [style.width.%]="gastoPresupuesto(p) / +p.monto * 100 > 100 ? 100 : gastoPresupuesto(p) / +p.monto * 100"></div></div>
- <small class="budget-remaining" [class.over-budget]="gastoPresupuesto(p) > +p.monto">Disponible Q{{+p.monto-gastoPresupuesto(p) | number:'1.2-2'}}</small>
+ <small class="budget-remaining" [class.over-budget]="gastoPresupuesto(p) > +p.monto">{{gastoPresupuesto(p) > +p.monto ? 'Excedido por' : 'Disponible'}} Q{{(gastoPresupuesto(p) > +p.monto ? gastoPresupuesto(p)-+p.monto : +p.monto-gastoPresupuesto(p)) | number:'1.2-2'}}</small>
  </article></div>
 </section>
 <section class="chart-card detail-card">

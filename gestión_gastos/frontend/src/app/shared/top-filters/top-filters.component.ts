@@ -1,3 +1,4 @@
+import { NonNegativeDirective } from '../non-negative.directive';
 import { hoyLocal } from '../registro.utils';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output, inject, signal } from '@angular/core';
@@ -22,7 +23,7 @@ const hoyISO = (d: Date) => hoyLocal(d);
 @Component({
   selector: 'app-top-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [NonNegativeDirective, CommonModule, FormsModule],
   templateUrl: './top-filters.component.html',
   styleUrl: './top-filters.component.scss',
 })

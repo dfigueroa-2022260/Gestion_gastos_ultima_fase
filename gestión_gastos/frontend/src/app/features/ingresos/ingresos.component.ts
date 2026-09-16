@@ -1,3 +1,4 @@
+import { NonNegativeDirective } from '../../shared/non-negative.directive';
 import { BarChartComponent } from '../../shared/bar-chart/bar-chart.component';
 import { CategoryDonutComponent } from '../../shared/category-donut/category-donut.component';
 import { TopFiltersComponent, RangoFechas } from '../../shared/top-filters/top-filters.component';
@@ -42,7 +43,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-ingresos',
   standalone: true,
-  imports: [BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
+  imports: [NonNegativeDirective, BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './ingresos.component.html',
   styleUrl: './ingresos.component.scss',
 })
@@ -193,7 +194,7 @@ export class IngresosComponent implements OnInit {
 
     this.ingresoService.eliminar(ingreso.id).subscribe({
       next: () => this.cargarTodo(),
-      error: () => this.error.set('No se pudo eliminar el ingreso.'),
+      error: (err) => this.error.set(err?.error?.error ?? 'No se pudo eliminar el ingreso.'),
     });
   }
 

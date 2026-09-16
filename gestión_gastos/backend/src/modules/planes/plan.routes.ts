@@ -1,3 +1,4 @@
+import { conSaldoValidado } from '../balance/balance.service';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../config/prisma';
@@ -10,6 +11,6 @@ const router = Router();
 router.use(authMiddleware);
 const schema = z.object({tipo:z.enum(['CUENTA','PROXIMO','PRESUPUESTO']), nombre:z.string().trim().min(1,'La descripción es obligatoria'),monto:montoRegistro,fecha:z.coerce.date().optional()}).refine(d=> d.tipo === 'CUENTA' || !!d.fecha, 'Selecciona una fecha para el presupuesto o gasto próximo');
 router.get('/',asyncHandler(async(req,res)=>{res.json(await prisma.planFinanciero.findMany({where:{usuarioId:req.usuarioId!},orderBy:{createdAt:'desc'}}));}));
-router.post('/',validate(schema),asyncHandler(async(req,res)=>{res.status(201).json(await prisma.planFinanciero.create({data:{...req.body,usuarioId:req.usuarioId!}}));}));
-router.delete('/:id',asyncHandler(async(req,res)=>{const r=await prisma.planFinanciero.deleteMany({where:{id:req.params.id,usuarioId:req.usuarioId!}});if(!r.count)throw new AppError('Registro no encontrado',404);res.status(204).send();}));
+router.post('/',validate(schema),asyncHandler(async(req,res)=>{res.status(201).json(await conSaldoValidado(req.usuarioId!, tx => tx.planFinanciero.create({data:{...req.body,usuarioId:req.usuarioId!}})));}));
+router.delete('/:id',asyncHandler(async(req,res)=>{const r=await conSaldoValidado(req.usuarioId!, tx => tx.planFinanciero.deleteMany({where:{id:req.params.id,usuarioId:req.usuarioId!}}));if(!r.count)throw new AppError('Registro no encontrado',404);res.status(204).send();}));
 export default router;

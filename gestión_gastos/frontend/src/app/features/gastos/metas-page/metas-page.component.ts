@@ -1,3 +1,4 @@
+import { NonNegativeDirective } from '../../../shared/non-negative.directive';
 import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
 import { enRango } from '../../../shared/registro.utils';
@@ -37,7 +38,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-metas-page',
   standalone: true,
-  imports: [BarChartComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
+  imports: [NonNegativeDirective, BarChartComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './metas-page.component.html',
   styleUrl: './metas-page.component.scss',
 })

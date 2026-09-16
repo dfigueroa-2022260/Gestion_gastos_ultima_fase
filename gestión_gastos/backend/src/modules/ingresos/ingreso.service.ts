@@ -1,3 +1,5 @@
+import { conSaldoValidado } from '../balance/balance.service';
+import { Prisma } from '@prisma/client';
 import { prisma } from "../../config/prisma";
 import { AppError } from "../../utils/AppError";
 import { IngresoInput } from "./ingreso.schema";
@@ -10,8 +12,8 @@ export const listarIngresos = (usuarioId: string) => {
   });
 };
 
-const validarCategoria = async (usuarioId: string, categoriaId: string) => {
-  const categoria = await prisma.categoria.findFirst({
+const validarCategoria = async (tx: Prisma.TransactionClient, usuarioId: string, categoriaId: string) => {
+  const categoria = await tx.categoria.findFirst({
     where: { id: categoriaId, usuarioId },
   });
 
@@ -20,44 +22,44 @@ const validarCategoria = async (usuarioId: string, categoriaId: string) => {
   }
 };
 
-export const crearIngreso = async (usuarioId: string, data: IngresoInput) => {
-  await validarCategoria(usuarioId, data.categoriaId);
+export const crearIngreso = async (usuarioId: string, data: IngresoInput) => conSaldoValidado(usuarioId, async tx => {
+  await validarCategoria(tx, usuarioId, data.categoriaId);
 
-  return prisma.ingreso.create({
+  return tx.ingreso.create({
     data: { ...data, usuarioId },
     include: { categoria: true },
   });
-};
+});
 
 export const actualizarIngreso = async (
   usuarioId: string,
   id: string,
   data: IngresoInput
-) => {
-  const ingreso = await prisma.ingreso.findFirst({ where: { id, usuarioId } });
+) => conSaldoValidado(usuarioId, async tx => {
+  const ingreso = await tx.ingreso.findFirst({ where: { id, usuarioId } });
 
   if (!ingreso) {
     throw new AppError("Ingreso no encontrado", 404);
   }
 
-  await validarCategoria(usuarioId, data.categoriaId);
+  await validarCategoria(tx, usuarioId, data.categoriaId);
 
-  return prisma.ingreso.update({
+  return tx.ingreso.update({
     where: { id },
     data,
     include: { categoria: true },
   });
-};
+});
 
-export const eliminarIngreso = async (usuarioId: string, id: string) => {
-  const ingreso = await prisma.ingreso.findFirst({ where: { id, usuarioId } });
+export const eliminarIngreso = async (usuarioId: string, id: string) => conSaldoValidado(usuarioId, async tx => {
+  const ingreso = await tx.ingreso.findFirst({ where: { id, usuarioId } });
 
   if (!ingreso) {
     throw new AppError("Ingreso no encontrado", 404);
   }
 
-  await prisma.ingreso.delete({ where: { id } });
-};
+  await tx.ingreso.delete({ where: { id } });
+});
 
 export const resumenPorCategoria = async (usuarioId: string) => {
   const resultado = await prisma.ingreso.groupBy({

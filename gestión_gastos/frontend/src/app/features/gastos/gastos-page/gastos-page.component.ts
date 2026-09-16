@@ -1,3 +1,4 @@
+import { NonNegativeDirective } from '../../../shared/non-negative.directive';
 import { BarChartComponent } from '../../../shared/bar-chart/bar-chart.component';
 import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
 import { TopFiltersComponent, RangoFechas } from '../../../shared/top-filters/top-filters.component';
@@ -42,7 +43,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-gastos-page',
   standalone: true,
-  imports: [BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
+  imports: [NonNegativeDirective, BarChartComponent, CategoryDonutComponent, TopFiltersComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './gastos-page.component.html',
   styleUrl: './gastos-page.component.scss',
 })
@@ -193,7 +194,7 @@ export class GastosPageComponent implements OnInit {
 
     this.gastoService.eliminar(gasto.id).subscribe({
       next: () => this.cargarTodo(),
-      error: () => this.error.set('No se pudo eliminar el gasto.'),
+      error: (err) => this.error.set(err?.error?.error ?? 'No se pudo eliminar el gasto.'),
     });
   }
 

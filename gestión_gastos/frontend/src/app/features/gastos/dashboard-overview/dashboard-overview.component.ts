@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { BalanceService } from '../../../shared/balance.service';
+import { BalanceNoticeComponent } from '../../../shared/balance-notice.component';
 import { CategoryDonutComponent } from '../../../shared/category-donut/category-donut.component';
 import { coincideMovimiento, resumir } from '../../../shared/registro.utils';
 import { CommonModule } from '@angular/common';
@@ -33,11 +36,13 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-dashboard-overview',
   standalone: true,
-  imports: [CategoryDonutComponent, CommonModule, TopFiltersComponent],
+  providers: [BalanceService],
+  imports: [BalanceNoticeComponent, CategoryDonutComponent, CommonModule, TopFiltersComponent],
   templateUrl: './dashboard-overview.component.html',
   styleUrl: './dashboard-overview.component.scss',
 })
 export class DashboardOverviewComponent implements OnInit {
+  readonly balance = inject(BalanceService);
   private readonly gastosSinFiltrar = signal<Gasto[]>([]);
   private readonly ingresosSinFiltrar = signal<Ingreso[]>([]);
   private readonly ahorrosSinFiltrar = signal<Ahorro[]>([]);
@@ -63,7 +68,7 @@ export class DashboardOverviewComponent implements OnInit {
   readonly totalAhorros = computed(() =>
     this.ahorros().reduce((s, a) => s + (a.tipo === 'RETIRO' ? -Number(a.monto) : Number(a.monto)), 0)
   );
-  readonly saldo = computed(() => this.totalIngresos() - this.totalGastos());
+  readonly saldo = computed(() => this.balance.datos()?.disponible ?? 0);
 
   readonly gastosDelMesPct = computed(() => {
     if (this.totalIngresos() === 0) return 0;
@@ -136,6 +141,7 @@ export class DashboardOverviewComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.balance.cargar(this.rango().hasta);
     this.gastoService.listar().subscribe({ next: (g) => this.gastosSinFiltrar.set(g) });
     this.ingresoService.listar().subscribe({ next: (i) => this.ingresosSinFiltrar.set(i) });
     this.ahorroService.listar().subscribe({
@@ -149,7 +155,7 @@ export class DashboardOverviewComponent implements OnInit {
   }
 
   onRango(r: RangoFechas): void {
-    this.rango.set(r);
+    this.rango.set(r); this.balance.cargar(r.hasta);
   }
 
   toggleConsejo(): void {

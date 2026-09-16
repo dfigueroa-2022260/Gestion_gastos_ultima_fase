@@ -2,6 +2,7 @@
   <h1>CASH TRACK <span>Principal</span></h1>
   <app-top-filters [movimientos]="true" [rango]="rango()" (rangoChange)="onRango($event)"></app-top-filters>
 </div>
+<app-balance-notice></app-balance-notice>
 
 <button class="tip-banner" type="button" (click)="toggleConsejo()">
   {{ consejoAbierto() ? 'Ocultar consejo' : 'Consejos de Finanzas' }}
@@ -14,12 +15,12 @@
 <div class="stats-grid">
   <div class="stat-card highlight">
     <div class="stat-top">
-      <span>Saldo</span>
+      <span>Saldo disponible</span>
       <span class="stat-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke-linecap="round"/></svg>
       </span>
     </div>
-    <div class="stat-value">Q{{ saldo() | number: '1.0-2' }}</div>
+    <div class="stat-value">{{balance.datos() ? 'Q' + (saldo() | number:'1.0-2') : '—'}}</div><div class="stat-sub">Acumulado hasta {{rango().hasta || 'hoy'}}</div>
     <div class="stat-sub">{{ rango().etiqueta }}</div>
   </div>
 
